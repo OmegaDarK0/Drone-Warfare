@@ -78,7 +78,7 @@ SoundPack *CreateSoundPack(char *name, const int n){
         char filename[256];
         sprintf(filename, "%s%d.wav", name, i + 1);
         Mix_Chunk *tmp = LoadSound(filename);
-        DecreaseVolumeSound(tmp, 64);
+        DecreaseVolumeSound(tmp, 77);
         sound_pack->sounds[i] = tmp;
     }
     return sound_pack;

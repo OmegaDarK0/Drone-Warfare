@@ -440,7 +440,7 @@ int main(int argc, char *argv[]){
                 // SUMMON ENTITIES
                 summon_delay--;
                 if (!summon_delay){
-                    summon_delay = randint(summon_delay_max / 10, summon_delay_max);
+                    summon_delay = randint(summon_delay_max / 5, summon_delay_max);
                     summon_delay_max--;
                     Entity *summoned = CreateEntity(); // COULD BE A MEMORY LEAK
                     const int rand_category = randint(0, 49);
