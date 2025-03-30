@@ -6,7 +6,7 @@ LIB = ./lib/
 
 CC = gcc
 CFLAGS = -Wall -std=c11
-LFLAGS = -lSDL2 -lSDL2_image -lSDL2_mixer -lfreetype -lm -lmingw32
+LFLAGS = -Bstatic -lSDL2 -lSDL2_image -lSDL2_mixer -lfreetype -Bdynamic -lm -lmingw32
 EXEC = DroneWarfare
 
 .PHONY: all run clean
