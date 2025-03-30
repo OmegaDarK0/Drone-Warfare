@@ -246,8 +246,8 @@ void HandleCollision(Entity **entity1, Entity **entity2){
         (*entity2)->hitpoints -= (*entity1)->melee_damage;
         (*entity1)->highlight = TimeToFrames(0.1);
         (*entity2)->highlight = TimeToFrames(0.1);
-        if ((*entity1)->elementary == 1) (*entity2)->effect = TimeToFrames(3);
-        if ((*entity2)->elementary == 1) (*entity1)->effect = TimeToFrames(3);
+        if ((*entity1)->elementary == 1) (*entity2)->effect = TimeToFrames(1.5);
+        if ((*entity2)->elementary == 1) (*entity1)->effect = TimeToFrames(1.5);
     }
 }
 

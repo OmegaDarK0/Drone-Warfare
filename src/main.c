@@ -110,15 +110,15 @@ int main(int argc, char *argv[]){
     sniper_rifle_sounds = CreateSoundPack("sniper_distant", 4);
     // MUSIC
     Mix_Music *current_music = NULL;
-    Mix_Music *current_music_intro = NULL;
-    Mix_Music *level1_music_intro = LoadMusic("1-04. Money or Meteors (Arcadia Intro Version).mp3");
+    //Mix_Music *current_music_intro = NULL;
+    /*Mix_Music *level1_music_intro = LoadMusic("1-04. Money or Meteors (Arcadia Intro Version).mp3");
     Mix_Music *level2_music_intro = LoadMusic("1-09. Bad Here Day (Shield Interior Intro Version).mp3");
     Mix_Music *level3_music_intro = LoadMusic("1-05. Best Guess at Best (Shield World Intro Version).mp3");
-    Mix_Music *level4_music_intro = LoadMusic("1-07. Fingerprints are Broken (Harvest Intro Version).mp3");
-    Mix_Music *level1_music = LoadMusic("04 Money or Meteors.mp3");
-    Mix_Music *level2_music = LoadMusic("02 Bad Here Day.mp3");
-    Mix_Music *level3_music = LoadMusic("17 Best Guess At Best.mp3");
-    Mix_Music *level4_music = LoadMusic("21 Fingerprints Are Broken.mp3");
+    Mix_Music *level4_music_intro = LoadMusic("1-07. Fingerprints are Broken (Harvest Intro Version).mp3");*/
+    Mix_Music *level1_music = LoadMusic("05 Flollo.mp3");
+    Mix_Music *level2_music = LoadMusic("17 Best Guess At Best.mp3");
+    Mix_Music *level3_music = LoadMusic("10 Six-Armed Robbing Suit.mp3");
+    Mix_Music *level4_music = LoadMusic("11 Action Figure Hands.mp3");
     Mix_Music *level0_music = LoadMusic(".Battotai - Imperial Japanese Army March.mp3");
     // SOLIDS
     Solid *score_title;
@@ -194,6 +194,7 @@ int main(int argc, char *argv[]){
         restart = 0;
         score = 0;
         entity_count = 0;
+        easter_egg = 0;
         key_pause = SDL_FALSE;
         key_up = SDL_FALSE;
         key_down = SDL_FALSE;
@@ -217,31 +218,31 @@ int main(int argc, char *argv[]){
                 if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT){
                     if (cursor->rect.x == 0 && cursor->rect.y == 0){
                         current_music = level0_music;
-                        current_music_intro = level0_music;
+                        //current_music_intro = level0_music;
                         background = level0;
                         easter_egg = 1;
                     }
                     else if (HEIGHT / 5. <= cursor->rect.y && cursor->rect.y <= 7 * HEIGHT / 15.){
                         if (WIDTH / 5 <= cursor->rect.x && cursor->rect.x <= 2 * WIDTH / 5.) {
                             current_music = level1_music;
-                            current_music_intro = level1_music_intro;
+                            //current_music_intro = level1_music_intro;
                             background = level1;
                         }
                         else if (3 * WIDTH / 5. <= cursor->rect.x && cursor->rect.x <= 4 * WIDTH / 5.) {
                             current_music = level2_music;
-                            current_music_intro = level2_music_intro;
+                            //current_music_intro = level2_music_intro;
                             background = level2;
                         }
                     }
                     else if (3 * HEIGHT / 5. <= cursor->rect.y && cursor->rect.y <= 13 * HEIGHT / 15.){
                         if (WIDTH / 5 <= cursor->rect.x && cursor->rect.x <= 2 * WIDTH / 5.) {
                             current_music = level3_music;
-                            current_music_intro = level3_music_intro;
+                            //current_music_intro = level3_music_intro;
                             background = level3;
                         }
                         else if (3 * WIDTH / 5. <= cursor->rect.x && cursor->rect.x <= 4 * WIDTH / 5.) {
                             current_music = level4_music;
-                            current_music_intro = level4_music_intro;
+                            //current_music_intro = level4_music_intro;
                             background = level4;
                         }
                     }
@@ -296,39 +297,39 @@ int main(int argc, char *argv[]){
                 if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT){
                     if (2 * WIDTH / 5. <= cursor->rect.x && cursor->rect.x <= 3 * WIDTH / 5.){
                         if (HEIGHT / 6. <= cursor->rect.y && cursor->rect.y <= HEIGHT / 6. + HEIGHT / 9.) {
-                            InitEntity(drone, 128, 128, 0, 10, 2.5, 0.75, 4, 100, 1000, 60, 100);
+                            InitEntity(drone, 128, 128, 0, 5, 2.5, 0.75, 4, 200, 1000, 60, 100);
                             InitEntity(drone_sb, 128, 128, 1, 15, 0, 1, 6, 0, 0, 0, 100);
                             InitEntity(drone_nova, 141, 141, 2, 25, 5, 0.75, 2, 100, 1000, 50, 100);
                             InitEntity(drone_hunter, 128, 128, 3, 50, 5, 1, 5, 125, 1250, 100, 100);
-                            summon_delay_max = TimeToFrames(3);
+                            summon_delay_max = TimeToFrames(6);
                             difficulty = 1;
                         }
                         else if (2 * HEIGHT / 6. <= cursor->rect.y && cursor->rect.y <= 2 * HEIGHT / 6. + HEIGHT / 9.) {
-                            InitEntity(drone, 128, 128, 0, 15, 5, 1, 5, 80, 800, 80, 100);
-                            InitEntity(drone_sb, 128, 128, 1, 25, 0, 1.5, 8, 0, 0, 0, 80);
-                            InitEntity(drone_nova, 141, 141, 2, 35, 10, 1, 2.5, 80, 800, 75, 100);
+                            InitEntity(drone, 128, 128, 0, 10, 5, 1, 5, 160, 800, 80, 100);
+                            InitEntity(drone_sb, 128, 128, 1, 20, 0, 1.5, 7, 0, 0, 0, 95);
+                            InitEntity(drone_nova, 141, 141, 2, 30, 10, 1, 2.5, 80, 800, 75, 100);
                             InitEntity(drone_hunter, 128, 128, 3, 55, 10, 1.25, 6.25, 100, 1000, 100, 100);
-                            summon_delay_max = TimeToFrames(2.75);
+                            summon_delay_max = TimeToFrames(5);
                             difficulty = 2;
                         }
                         else if (3 * HEIGHT / 6. <= cursor->rect.y && cursor->rect.y <= 3 * HEIGHT / 6. + HEIGHT / 9.) {
-                            InitEntity(drone, 128, 128, 0, 20, 10, 1.25, 6, 60, 600, 90, 100);
-                            InitEntity(drone_sb, 128, 128, 1, 30, 0, 2, 10, 0, 0, 0, 70);
-                            InitEntity(drone_nova, 141, 141, 2, 40, 15, 1.25, 3, 60, 600, 80, 100);
+                            InitEntity(drone, 128, 128, 0, 15, 10, 1.25, 6, 120, 600, 90, 100);
+                            InitEntity(drone_sb, 128, 128, 1, 25, 0, 2, 9, 0, 0, 0, 90);
+                            InitEntity(drone_nova, 141, 141, 2, 35, 15, 1.25, 3, 60, 600, 80, 100);
                             InitEntity(drone_hunter, 128, 128, 3, 65, 20, 1.5, 7.5, 75, 750, 100, 100);
-                            summon_delay_max = TimeToFrames(2.5);
+                            summon_delay_max = TimeToFrames(4);
                             difficulty = 3;
                         }
                         else if (4 * HEIGHT / 6. <= cursor->rect.y && cursor->rect.y <= 4 * HEIGHT / 6. + HEIGHT / 9.) {
-                            InitEntity(drone, 128, 128, 0, 25, 15, 1.5, 7, 40, 400, 95, 100);
-                            InitEntity(drone_sb, 128, 128, 1, 35, 0, 2.5, 12, 0, 0, 0, 60);
-                            InitEntity(drone_nova, 141, 141, 2, 45, 20, 1.5, 3.5, 40, 400, 85, 100);
+                            InitEntity(drone, 128, 128, 0, 20, 15, 1.5, 7, 80, 400, 95, 100);
+                            InitEntity(drone_sb, 128, 128, 1, 30, 0, 2.5, 11, 0, 0, 0, 75);
+                            InitEntity(drone_nova, 141, 141, 2, 40, 20, 1.5, 3.5, 40, 400, 85, 100);
                             InitEntity(drone_hunter, 128, 128, 3, 80, 30, 1.75, 8.75, 50, 500, 100, 100);
-                            summon_delay_max = TimeToFrames(2.25);
+                            summon_delay_max = TimeToFrames(3);
                             difficulty = 4;
                         }
                         else if (5 * HEIGHT / 6. <= cursor->rect.y && cursor->rect.y <= 5 * HEIGHT / 6. + HEIGHT / 9.) {
-                            InitEntity(drone, 128, 128, 0, 30, 20, 1.75, 8, 20, 200, 100, 100);
+                            InitEntity(drone, 128, 128, 0, 25, 20, 1.75, 8, 40, 200, 100, 100);
                             InitEntity(drone_sb, 128, 128, 1, 40, 0, 3, 14, 0, 0, 0, 50);
                             InitEntity(drone_nova, 141, 141, 2, 50, 25, 1.75, 4, 20, 200, 90, 100);
                             InitEntity(drone_hunter, 128, 128, 3, 100, 40, 2, 10, 25, 250, 100, 100);
@@ -348,7 +349,7 @@ int main(int argc, char *argv[]){
             RefreshScreen();
         }
         // GAME STARTED
-        PlayMusic(current_music_intro, 0);
+        PlayMusic(current_music, -1);
         SDL_ShowCursor(SDL_DISABLE);
         SummonEntity(player, 0, (float)(WIDTH / 2.), (float)(HEIGHT / 2.));
         player->speed = 8;
@@ -356,8 +357,8 @@ int main(int argc, char *argv[]){
         while (running && player->hitpoints > 0){
             //Uint32 frame_start_time = SDL_GetTicks();
             SDL_GetMouseState(&cursor->rect.x, &cursor->rect.y);
-            if (!Mix_PlayingMusic())
-                PlayMusic(current_music, 0);
+            /*if (!Mix_PlayingMusic())
+                PlayMusic(current_music, 0);*/
             while (SDL_PollEvent(&event)){
                 if (event.type == SDL_QUIT){
                     running = SDL_FALSE;
@@ -439,7 +440,8 @@ int main(int argc, char *argv[]){
                 // SUMMON ENTITIES
                 summon_delay--;
                 if (!summon_delay){
-                    summon_delay = summon_delay_max--;
+                    summon_delay = randint(summon_delay_max / 10, summon_delay_max);
+                    summon_delay_max--;
                     Entity *summoned = CreateEntity(); // COULD BE A MEMORY LEAK
                     const int rand_category = randint(0, 49);
                     int lifetime;
@@ -732,10 +734,10 @@ int main(int argc, char *argv[]){
     UnloadMusic(level2_music);
     UnloadMusic(level3_music);
     UnloadMusic(level4_music);
-    UnloadMusic(level1_music_intro);
+    /*UnloadMusic(level1_music_intro);
     UnloadMusic(level2_music_intro);
     UnloadMusic(level3_music_intro);
-    UnloadMusic(level4_music_intro);
+    UnloadMusic(level4_music_intro);*/
     // UNLOAD TEXTURES
     UnloadTexture(sb_mark);
     UnloadTexture(nova_mark);
