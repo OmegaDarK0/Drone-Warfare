@@ -4,6 +4,7 @@
 #include <SDL2/SDL.h>
 
 extern int WIDTH, HEIGHT, REFRESH_RATE;
+extern int BORDER_OFFSET;
 extern double TIME;
 extern SDL_Rect SCREEN;
 extern SDL_Color VOID, BLACK, WHITE, RED, YELLOW, GREEN, CYAN, BLUE, MAGENTA;

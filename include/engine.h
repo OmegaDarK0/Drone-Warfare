@@ -3,7 +3,6 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
-#include <freetype/freetype.h>
 #include "structures.h"
 
 // ENGINE
@@ -11,14 +10,18 @@ int QuitEngine(void);
 int InitEngine(void);
 
 // IMAGE & TEXTURE
-SDL_Surface *LoadImage(const char *filename);
-SDL_Surface *LoadText(FT_Face font, const char *text, SDL_Color color);
-SDL_Texture *LoadTexture(const char *filename);
-SDL_Texture *LoadTextureFromImage(SDL_Surface *surface);
-SDL_Texture *LoadTextureFromText(FT_Face font, const char *text, SDL_Color color);
-void GetTextureSize(SDL_Texture* texture, int* width, int* height);
+//SDL_Surface *GetAsciiChar(const SDL_Surface *asciiImage, char c);
 void UnloadImage(SDL_Surface *surface);
 void UnloadTexture(SDL_Texture *texture);
+void CopyImage(const SDL_Surface *src, const SDL_Surface *dst, int x_offset, int y_offset);
+void ResizeImage(const SDL_Surface *src, const SDL_Surface *dst, int width, int height, int offset);
+SDL_Surface *CreateImage(int width, int height);
+SDL_Surface *LoadImage(const char *filename);
+SDL_Texture *LoadTexture(const char *filename);
+SDL_Texture *LoadTextureFromImage(SDL_Surface *surface);
+SDL_Surface *LoadText(const char *text, int size, SDL_Color color);
+SDL_Texture *LoadTextureFromText(const char *text, int size, SDL_Color color);
+void GetTextureSize(SDL_Texture* texture, int* width, int* height);
 
 // SOUND & MUSIC
 Mix_Chunk *LoadSound(const char *filename);
@@ -62,7 +65,7 @@ void HighlightFilter(const SDL_Surface* surface, int alpha);
 
 // TEXTE & SOLID
 Solid *CreateSolid(SDL_Rect rect, SDL_Color color, const char *str);
-Solid *CreateSolidText(SDL_Rect rect, SDL_Color color, const char *str, FT_Face font, SDL_Color text_color);
+Solid *CreateSolidText(SDL_Rect rect, SDL_Color color, const char *str, int size, SDL_Color text_color);
 void DestroySolid(Solid *solid);
 
 // MISC

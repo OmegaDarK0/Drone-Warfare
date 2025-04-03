@@ -1,7 +1,6 @@
 #ifndef HUD_H
 #define HUD_H
 
-#include <SDL2/SDL.h>
 #include "structures.h"
 
 extern Solid *hitpoints_info;

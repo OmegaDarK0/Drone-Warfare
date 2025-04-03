@@ -2,7 +2,6 @@
 #define GLOBALS_H
 
 #include <SDL2/SDL.h>
-#include <freetype2/freetype/freetype.h>
 
 extern unsigned long int seed;
 
@@ -16,11 +15,11 @@ extern SDL_bool debug;
 extern SDL_Texture *debug_hitbox;
 extern SDL_Window *window;
 extern SDL_Renderer *renderer;
-extern FT_Library ft_library;
-extern FT_Face font_small;
-extern FT_Face font_medium;
-extern FT_Face font_large;
-extern FT_Face font_xxl;
-extern FT_Face font_jumbo;
+
+extern int font_small;
+extern int font_medium;
+extern int font_large;
+extern int font_xxl;
+extern int font_jumbo;
 
 #endif /* GLOBALS_H */
