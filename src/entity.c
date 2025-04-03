@@ -109,7 +109,7 @@ void UpdateEntityState(Entity *entity){
         else if (entity->AI_lifetime > 0) entity->AI_lifetime--;
     }
     if (!entity->frame_delay){
-        entity->frame_delay = entity->frame_time;
+        entity->frame_delay = entity->frame_time + (int)(0.5 * entity->frame_time * entity->velocity_y);
         if (entity->reverse_frame_mode == 0 && ++entity->frame_index == entity->num_frames)
             entity->frame_index = 0;
         else if (entity->reverse_frame_mode > 0 && ++entity->frame_index == entity->num_frames){
@@ -148,7 +148,7 @@ void DisplayEntity(const Entity *entity){
     if (debug){
         char text[16];
         sprintf(text, "%d", entity->ID);
-        SDL_Texture *ID = LoadTextureFromText(font_medium, text, WHITE);
+        SDL_Texture *ID = LoadTextureFromText(text, font_medium, WHITE);
         const SDL_Rect rect = {(int)entity->hitbox.x, (int)entity->hitbox.y, 32, 32};
         DrawTexture(debug_hitbox, FRectToRect(entity->hitbox));
         DrawTexture(ID, rect);

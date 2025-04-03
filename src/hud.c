@@ -14,8 +14,8 @@ SDL_Rect hitpoints_rect;
 SDL_Rect hitpoints_max_rect;
 
 void InitHUD() {
-    hitpoints_rect = rect(WIDTH * 100 / 1920, 5, 100, 40, 1);
-    hitpoints_max_rect = rect(0, 5, 0, 40, 1);
+    hitpoints_rect = rect(scale_width(120), BORDER_OFFSET + 7, 100, 40, 1);
+    hitpoints_max_rect = rect(0, BORDER_OFFSET + 7, 0, 40, 1);
 }
 
 void DisplayHUD(const Entity *entity){
@@ -42,7 +42,7 @@ void DisplayEffect(const Entity *entity){
 void RenderScore() {
     char score_str[16];
     sprintf(score_str, "SCORE: %d", score);
-    score_info->texture = LoadTextureFromText(font_large, score_str, WHITE);
+    score_info->texture = LoadTextureFromText(score_str, font_large, WHITE);
 }
 
 void GainScore(const Entity *entity, const int difficulty){

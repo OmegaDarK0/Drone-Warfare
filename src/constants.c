@@ -1,6 +1,7 @@
 #include "constants.h"
 
 int WIDTH, HEIGHT, REFRESH_RATE;
+int BORDER_OFFSET = 5;
 double TIME = 20;
 
 SDL_Rect SCREEN;

@@ -6,6 +6,7 @@
 #include "entity_list.h"
 #include "globals.h"
 #include "hud.h"
+#include "glyph.h"
 #include "resource.h"
 #include "utils.h"
 //#include "debug.h"
@@ -75,10 +76,11 @@ int main(int argc, char *argv[]){
     // INIT
     srand(time(NULL));
     InitEngine();
-    //InitDebug();
     InitHUD();
+    //InitDebug();
     double treshold = HEIGHT - scale_height(128);
     // CREATE AND LOAD TEXTURES
+    CreateGlyphs();
     sb_mark = LoadTexture("sb.png");
     nova_mark = LoadTexture("nova.png");
     hunter_mark = LoadTexture("hunter.png");
@@ -89,8 +91,8 @@ int main(int argc, char *argv[]){
     level4 = LoadTexture("level4.png");
     level0 = LoadTexture(".Naval_ensign_of_the_Empire_of_Japan.png");
     background = NULL;
-    hitpoints_info = CreateSolidText(rect(0, 5, 1, 1, 0), WHITE, "HP", font_large, WHITE);
-    score_info = CreateSolidText(rect(0, HEIGHT - HEIGHT * 45 / 1080, 1, 1, 0), WHITE, "SCORE: 0", font_large, WHITE);
+    hitpoints_info = CreateSolidText(rect(BORDER_OFFSET, BORDER_OFFSET, 1, 1, 0), WHITE, "HP", font_large, WHITE);
+    score_info = CreateSolidText(rect(BORDER_OFFSET, HEIGHT - HEIGHT * 50 / 1080 - BORDER_OFFSET, 1, 1, 0), WHITE, "SCORE: 0", 45, WHITE);
     black_drone_frames = CreateTexturePackEXT("drone", 4, 0, RED);
     silver_drone_frames = CreateTexturePackEXT("silver_drone", 4, 0, RED);
     gold_drone_frames = CreateTexturePackEXT("gold_drone", 4, 0, RED);
@@ -128,7 +130,7 @@ int main(int argc, char *argv[]){
     Solid *button3 = CreateSolidText(rect(0, 3 * HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0), color(200, 200, 0, 255), "HARD", font_large, WHITE);
     Solid *button4 = CreateSolidText(rect(0, 4 * HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0), color(200, 0, 0, 255), "HARDER", font_large, WHITE);
     Solid *button5 = CreateSolidText(rect(0, 5 * HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0), color(200, 0, 200, 255), "INSANE", font_large, WHITE);
-    Solid *restart_button = CreateSolidText(rect(0, 2 * HEIGHT / 3, WIDTH / 5, HEIGHT / 9, 0), color(100, 100, 100, 255), "RESTART", font_large, WHITE);
+    Solid *restart_button = CreateSolidText(rect(0, 2 * HEIGHT / 3, WIDTH / 5, HEIGHT / 9, 0), color(100, 100, 100, 255), "RESTART", 45, WHITE);
     Solid *game_over_title = CreateSolidText(rect(0, HEIGHT / 4, 1, 1, 0), VOID, "GAME OVER", font_xxl, WHITE);
     Solid *pause_title = CreateSolidText(rect(0, 0, 1, 1, 0), VOID, "PAUSE", font_xxl, WHITE);
     Solid *player_name_title = CreateSolidText(rect(0, 11 * HEIGHT / 20, 1, 1, 0), VOID, "ENTER YOUR NAME", font_large, WHITE);
@@ -201,12 +203,16 @@ int main(int argc, char *argv[]){
         key_left = SDL_FALSE;
         key_right = SDL_FALSE;
         key_mouse = SDL_FALSE;
-        player_name_title->texture = LoadTextureFromText(font_large, "ENTER YOUR NAME", WHITE);
+        player_name_title->texture = LoadTextureFromText("ENTER YOUR NAME", font_large, WHITE);
         ClearEntityList(ennemies);
         //ClearEntityList(drone->projectiles);
         //ClearEntityList(player->projectiles);
         RenderScore();
         ResetVolumeMusic();
+        // DEBUG GLYPHS
+        /*RenderGlyphs();
+        RefreshScreen();
+        SDL_Delay(3000);*/
         while (running && !background){
             SDL_GetMouseState(&cursor->rect.x, &cursor->rect.y);
             while (SDL_PollEvent(&event)){
@@ -695,18 +701,18 @@ int main(int argc, char *argv[]){
                             text_input = SDL_FALSE;
                             SDL_StopTextInput();
                             if (strlen(player_name)) {
-                                player_name_title->texture = LoadTextureFromText(font_large, player_name, GREEN);
+                                player_name_title->texture = LoadTextureFromText(player_name, font_large, GREEN);
                                 RegisterScore(player_name, difficulty);
                             }
                             else {
-                                player_name_title->texture = LoadTextureFromText(font_large, "GUEST", GREEN);
+                                player_name_title->texture = LoadTextureFromText("GUEST", font_large, GREEN);
                                 RegisterScore("guest", difficulty);
                             }
                         }
                         if (event.key.keysym.sym == SDLK_BACKSPACE && strlen(player_name) > 0) {
                             player_name[strlen(player_name) - 1] = '\0';
-                            if (strlen(player_name) == 0) player_name_title->texture = LoadTextureFromText(font_large, "ENTER YOUR NAME", WHITE);
-                            else player_name_title->texture = LoadTextureFromText(font_large, player_name, WHITE);
+                            if (strlen(player_name) == 0) player_name_title->texture = LoadTextureFromText("ENTER YOUR NAME", font_large, WHITE);
+                            else player_name_title->texture = LoadTextureFromText(player_name, font_large, WHITE);
                         }
                     }
                 }
@@ -716,7 +722,7 @@ int main(int argc, char *argv[]){
                         restart = 1;
                 if (text_input && event.type == SDL_TEXTINPUT && strlen(player_name) < 8) {
                     strcat(player_name, event.text.text);
-                    player_name_title->texture = LoadTextureFromText(font_large, player_name, WHITE);
+                    player_name_title->texture = LoadTextureFromText(player_name, font_large, WHITE);
                 }
             }
             ClearScreen();
@@ -728,6 +734,7 @@ int main(int argc, char *argv[]){
         }
         SDL_StopTextInput();
     }
+    ClearGlyphs();
     // UNLOAD MUSIC
     UnloadMusic(level0_music);
     UnloadMusic(level1_music);

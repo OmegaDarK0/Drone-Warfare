@@ -1,4 +1,5 @@
 #include "engine.h"
+#include "glyph.h"
 #include <SDL2/SDL_image.h>
 #include <math.h>
 #include <stdio.h>
@@ -8,12 +9,6 @@
 
 int QuitEngine(){
     running = SDL_FALSE;
-    if (font_jumbo) FT_Done_Face(font_jumbo);
-    if (font_xxl) FT_Done_Face(font_xxl);
-    if (font_large) FT_Done_Face(font_large);
-    if (font_medium) FT_Done_Face(font_medium);
-    if (font_small) FT_Done_Face(font_small);
-    if (ft_library) FT_Done_FreeType(ft_library);
     if (renderer) SDL_DestroyRenderer(renderer);
     if (window) SDL_DestroyWindow(window);
     Mix_CloseAudio();
@@ -73,62 +68,6 @@ int InitEngine() {
     }
     if (SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND) < 0) {
         SDL_Log("SDL_SetRenderDrawBlendMode: %s\n", SDL_GetError());
-        return QuitEngine();
-    }
-
-    FT_Error error = FT_Init_FreeType(&ft_library);
-    if (error) {
-        fprintf(stderr, "FT_Init_FreeType: %d\n", error);
-        return QuitEngine();
-    }
-    error = FT_New_Face(ft_library, "assets/fonts/slkscr.ttf", 0, &font_small);
-    if (error) {
-        fprintf(stderr, "FT_New_Face: %d\n", error);
-        return QuitEngine();
-    }
-    error = FT_New_Face(ft_library, "assets/fonts/slkscr.ttf", 0, &font_medium);
-    if (error) {
-        fprintf(stderr, "FT_New_Face: %d\n", error);
-        return QuitEngine();
-    }
-    error = FT_New_Face(ft_library, "assets/fonts/slkscr.ttf", 0, &font_large);
-    if (error) {
-        fprintf(stderr, "FT_New_Face: %d\n", error);
-        return QuitEngine();
-    }
-    error = FT_New_Face(ft_library, "assets/fonts/slkscr.ttf", 0, &font_xxl);
-    if (error) {
-        fprintf(stderr, "FT_New_Face: %d\n", error);
-        return QuitEngine();
-    }
-    error = FT_New_Face(ft_library, "assets/fonts/slkscr.ttf", 0, &font_jumbo);
-    if (error) {
-        fprintf(stderr, "FT_New_Face: %d\n", error);
-        return QuitEngine();
-    }
-    error = FT_Set_Pixel_Sizes(font_small, 0, scale_height(16));
-    if (error) {
-        fprintf(stderr, "FT_Set_Pixel_Sizes: %d\n", error);
-        return QuitEngine();
-    }
-    error = FT_Set_Pixel_Sizes(font_medium, 0, scale_height(32));
-    if (error) {
-        fprintf(stderr, "FT_Set_Pixel_Sizes: %d\n", error);
-        return QuitEngine();
-    }
-    error = FT_Set_Pixel_Sizes(font_large, 0, scale_height(64));
-    if (error) {
-        fprintf(stderr, "FT_Set_Pixel_Sizes: %d\n", error);
-        return QuitEngine();
-    }
-    error = FT_Set_Pixel_Sizes(font_xxl, 0, scale_height(128));
-    if (error) {
-        fprintf(stderr, "FT_Set_Pixel_Sizes: %d\n", error);
-        return QuitEngine();
-    }
-    error = FT_Set_Pixel_Sizes(font_jumbo, 0, scale_height(256));
-    if (error) {
-        fprintf(stderr, "FT_Set_Pixel_Sizes: %d\n", error);
         return QuitEngine();
     }
     return 0;
@@ -238,6 +177,103 @@ void ClearScreen(){
     }
 }
 
+/*
+SDL_Surface *GetAsciiChar(const SDL_Surface *asciiImage, const char c) {
+    const int charWidth = 8;  // Largeur d'un caractère
+    const int charHeight = 8; // Hauteur d'un caractère
+    const char *asciiLayout =
+        " !\"#$%&'()*+,-./[\\]^_`\n"
+        "0123456789:;<=>?@{|}~\n"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ\n"
+        "abcdefghijklmnopqrstuvwxyz";
+
+    // Trouver l'index du caractère dans le layout
+    char *charPos = strchr(asciiLayout, c);
+    if (!charPos) {
+        SDL_Log("Caractère '%c' introuvable dans ascii.png", c);
+        return NULL;
+    }
+
+    int charIndex = (int)(charPos - asciiLayout); // Index du caractère dans le tableau
+    int cols = asciiImage->w / charWidth; // Nombre de colonnes dans l'image
+
+    // Calculer la position du caractère dans la grille
+    int row = charIndex / cols;
+    int col = charIndex % cols;
+
+    // Créer une surface vide pour contenir le caractère extrait
+    SDL_Surface *charSurface = SDL_CreateRGBSurfaceWithFormat(0, charWidth, charHeight, 32, SDL_PIXELFORMAT_RGBA32);
+    if (!charSurface) {
+        SDL_Log("SDL_CreateRGBSurface: %s\n", SDL_GetError());
+        return NULL;
+    }
+
+    Uint32 *src_pixels = (Uint32 *)asciiImage->pixels;    // Pixels source (image ASCII)
+    Uint32 *dst_pixels = (Uint32 *)charSurface->pixels;   // Pixels destination (caractère)
+    const int src_pitch = asciiImage->pitch / 4;          // Largeur mémoire réelle (source)
+    const int dst_pitch = charSurface->pitch / 4;         // Largeur mémoire réelle (destination)
+
+    // Copier bit à bit les pixels du caractère
+    for (int y = 0; y < charHeight; y++) {
+        for (int x = 0; x < charWidth; x++) {
+            // Calcul des coordonnées source
+            int srcX = col * charWidth + x; // Colonne dans la grille
+            int srcY = row * charHeight + y; // Ligne dans la grille
+
+            // Copier le pixel source vers la destination
+            Uint32 pixel = src_pixels[srcY * src_pitch + srcX];
+            dst_pixels[y * dst_pitch + x] = pixel;
+        }
+    }
+
+    return charSurface;
+}
+*/
+
+void CopyImage(const SDL_Surface *src, const SDL_Surface *dst, const int x_offset, const int y_offset) {
+    const Uint32 *src_pixels = (Uint32 *)src->pixels;
+    Uint32 *dst_pixels = (Uint32 *)dst->pixels;
+    const int src_pitch = src->pitch / 4;
+    const int dst_pitch = dst->pitch / 4;
+    for (int y = 0; y < dst->h; y++) {
+        for (int x = 0; x < dst->w; x++) {
+            const int src_x = x + x_offset;
+            const int src_y = y + y_offset;
+            dst_pixels[y * dst_pitch + x] = src_pixels[src_y * src_pitch + src_x];
+        }
+    }
+}
+
+void ResizeImage(const SDL_Surface *src, const SDL_Surface *dst, const int width, const int height, const int offset) {
+    // Extraction des informations source et destination
+    const Uint32 *src_pixels = (Uint32 *)src->pixels;
+    Uint32 *dst_pixels = (Uint32 *)dst->pixels;
+    const int src_pitch = src->pitch / 4; // Largeur mémoire réelle (source)
+    const int dst_pitch = dst->pitch / 4; // Largeur mémoire réelle (destination)
+    const int sw = src->w;             // Largeur de l'image source
+    const int sh = src->h;             // Hauteur de l'image source
+    // Redimensionnement bit à bit
+    for (int dy = 0; dy < height; dy++) { // Ligne destination
+        for (int dx = 0; dx < width; dx++) { // Colonne destination
+            // Calcul des coordonnées dans l'image source (proportions)
+            const int sx = dx * sw / width;  // Coordonnée source x
+            const int sy = dy * sh / height; // Coordonnée source y
+            const Uint32 pixel = src_pixels[sy * src_pitch + sx]; // Récupération du pixel source
+            dst_pixels[dy * dst_pitch + dx + offset] = pixel; // Placement du pixel dans la surface destination
+        }
+    }
+}
+
+SDL_Surface *CreateImage(const int width, const int height){
+    SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormat(0, width, height, 32, SDL_PIXELFORMAT_RGBA32);
+    if (!surface){
+        SDL_Log("SDL_CreateRGBSurface: %s\n", SDL_GetError());
+        QuitEngine();
+        return NULL;
+    }
+    return surface;
+}
+
 SDL_Surface *LoadImage(const char *filename){
     char path[256]; //= malloc((int)strlen(filename) + 15);
     sprintf(path, "assets/images/%s", filename);
@@ -247,110 +283,6 @@ SDL_Surface *LoadImage(const char *filename){
         QuitEngine();
         return NULL;
     }
-    return surface;
-}
-
-/*SDL_Surface *LoadText(FT_Face face, const char *text, const SDL_Color color){
-    int width = 0, height = 0;
-
-    // Calculer les dimensions de la surface à créer
-    for (const char* p = text; *p; p++) {
-        if (FT_Load_Char(face, *p, FT_LOAD_RENDER)) {
-            fprintf(stderr, "FT_Load_Char: Could not load character '%c'\n", *p);
-            return NULL;
-        }
-        width += (int)face->glyph->bitmap.width;
-        if (face->glyph->bitmap.rows > height) {
-            height = (int)face->glyph->bitmap.rows;
-        }
-    }
-
-    // Créer une surface SDL avec la taille calculée
-    SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormat(0, width, height, 32, SDL_PIXELFORMAT_RGBA32);
-    if (!surface) {
-        SDL_Log("SDL_CreateRGBSurfaceWithFormat: %s\n", SDL_GetError());
-        return NULL;
-    }
-
-    // Remplir la surface avec des glyphs rendus
-    int x = 0;
-    for (const char* p = text; *p; p++) {
-        if (FT_Load_Char(face, *p, FT_LOAD_RENDER)) {
-            SDL_Log("FT_Load_Char: Could not load character '%c'\n", *p);
-            SDL_FreeSurface(surface);
-            return NULL;
-        }
-
-        // Récupérer le glyphe rendu
-        FT_Bitmap* bitmap = &face->glyph->bitmap;
-
-        // Copier le glyphe dans la surface SDL
-        for (int i = 0; i < bitmap->rows; i++) {
-            for (int j = 0; j < bitmap->width; j++) {
-                const int dst_index = (i * surface->pitch / 4) + (x + j);
-                ((Uint32*)surface->pixels)[dst_index] = SDL_MapRGBA(surface->format, color.r, color.g, color.b, bitmap->buffer[i * bitmap->width + j]);
-            }
-        }
-        x += (int)bitmap->width;
-    }
-    return surface;
-}*/
-
-SDL_Surface *LoadText(FT_Face font, const char *text, const SDL_Color color) {
-    if (!font || !text) {
-        fprintf(stderr, "Font or text is NULL\n");
-        return NULL;
-    }
-
-    int width = 0, height = 0;
-    int max_height = 0;
-
-    // Calculer les dimensions de la surface à créer
-    for (const char* p = text; *p; p++) {
-        if (FT_Load_Char(font, *p, FT_LOAD_RENDER)) {
-            fprintf(stderr, "FT_Load_Char: Could not load character '%c'\n", *p);
-            return NULL;
-        }
-        width += (int)font->glyph->advance.x >> 6; // Utiliser l'avance en x pour la largeur de chaque caractère
-        if (font->glyph->bitmap.rows > max_height) {
-            max_height = (int)font->glyph->bitmap.rows;
-        }
-    }
-
-    height = max_height;
-
-    // Créer une surface SDL avec la taille calculée
-    SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormat(0, width, height, 32, SDL_PIXELFORMAT_RGBA32);
-    if (!surface) {
-        SDL_Log("SDL_CreateRGBSurfaceWithFormat: %s\n", SDL_GetError());
-        return NULL;
-    }
-
-    // Remplir la surface avec des glyphs rendus
-    int x = 0;
-    for (const char* p = text; *p; p++) {
-        if (FT_Load_Char(font, *p, FT_LOAD_RENDER)) {
-            SDL_Log("FT_Load_Char: Could not load character '%c'\n", *p);
-            SDL_FreeSurface(surface);
-            return NULL;
-        }
-
-        // Récupérer le glyphe rendu
-        FT_Bitmap* bitmap = &font->glyph->bitmap;
-        FT_Int x_offset = font->glyph->bitmap_left;
-        FT_Int y_offset = height - font->glyph->bitmap_top;
-
-        // Copier le glyphe dans la surface SDL
-        for (int i = 0; i < bitmap->rows; i++) {
-            for (int j = 0; j < bitmap->width; j++) {
-                const int dst_index = ((i + y_offset) * surface->pitch / 4) + (x + j + x_offset);
-                ((Uint32*)surface->pixels)[dst_index] = SDL_MapRGBA(surface->format, color.r, color.g, color.b, bitmap->buffer[i * bitmap->pitch + j]);
-            }
-        }
-
-        x += (int)font->glyph->advance.x >> 6;
-    }
-
     return surface;
 }
 
@@ -377,8 +309,25 @@ SDL_Texture *LoadTextureFromImage(SDL_Surface *surface){
     return texture;
 }
 
-SDL_Texture *LoadTextureFromText(FT_Face font, const char *text, const SDL_Color color){
-    SDL_Surface *surface = LoadText(font, text, color);
+SDL_Surface *LoadText(const char *text, const int size, const SDL_Color color) {
+    const int scaled_size = scale_width(size);
+    const int n = (int)strlen(text);
+    const int char_width = scaled_size; // Largeur du caractère (dépend du paramètre size)
+    const int char_height = scaled_size; // Hauteur du caractère (dépend du paramètre size)
+    const int width = char_width * n + scaled_size * n / 8; // Largeur totale de la surface
+    const int height = char_height;     // Hauteur totale de la surface
+    SDL_Surface *dst = CreateImage(width, height);
+    for (int i = 0; i < n; i++){
+        const SDL_Surface *src = GetGlyph(text[i]);
+        ResizeImage(src, dst, char_width, char_height, char_width * i + scaled_size * i / 8);
+        ReplaceColor(dst, WHITE, color);
+        //SDL_FreeSurface(src);
+    }
+    return dst;
+}
+
+SDL_Texture *LoadTextureFromText(const char *text, const int size, const SDL_Color color){
+    SDL_Surface *surface = LoadText(text, size, color);
     SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
     UnloadImage(surface);
     if (!texture){
@@ -540,9 +489,9 @@ Solid *CreateSolid(const SDL_Rect rect, const SDL_Color color, const char *str) 
     return solid;
 }
 
-Solid *CreateSolidText(const SDL_Rect rect, const SDL_Color color, const char *str, FT_Face font, const SDL_Color text_color) {
+Solid *CreateSolidText(const SDL_Rect rect, const SDL_Color color, const char *str, const int size, const SDL_Color text_color) {
     Solid *solid = malloc(sizeof(Solid));
-    solid->texture = LoadTextureFromText(font, str, text_color);
+    solid->texture = LoadTextureFromText(str, size, text_color);
     solid->rect = rect;
     solid->color = color;
     return solid;

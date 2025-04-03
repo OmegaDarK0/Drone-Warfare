@@ -12,9 +12,9 @@ SDL_bool debug = SDL_FALSE;
 SDL_Texture *debug_hitbox;
 SDL_Window *window;
 SDL_Renderer *renderer;
-FT_Library ft_library;
-FT_Face font_small;
-FT_Face font_medium;
-FT_Face font_large;
-FT_Face font_xxl;
-FT_Face font_jumbo;
+
+int font_small = 15;
+int font_medium = 25;
+int font_large = 50;
+int font_xxl = 100;
+int font_jumbo = 200;
