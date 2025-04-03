@@ -6,17 +6,21 @@ LIB = ./lib/
 
 CC = gcc
 CFLAGS = -Wall -std=c11
-LFLAGS = -Bstatic -lSDL2 -lSDL2_image -lSDL2_mixer -lfreetype -Bdynamic -lm -ldl
+LFLAGS = -Bstatic -lSDL2 -lSDL2_image -lSDL2_mixer -Bdynamic -lm -ldl
 EXEC = DroneWarfare
 
 .PHONY: all run clean
 
-all: $(EXEC)
+all: setup $(EXEC)
+
+setup:
+	mkdir -p $(BIN)
+	mkdir -p $(OBJ)
 
 run: $(EXEC)
 	$(BIN)$<
 
-$(EXEC): main.o engine.o entity.o entity_list.o resource.o hud.o utils.o globals.o constants.o debug.o
+$(EXEC): main.o engine.o entity.o entity_list.o resource.o hud.o glyph.o utils.o globals.o constants.o debug.o
 	$(CC) $(CFLAGS) $(OBJ)* -I $(INC) -L $(LIB) -o $(BIN)$@ $(LFLAGS)
 
 main.o: $(SRC)main.c
@@ -37,6 +41,9 @@ resource.o: $(SRC)resource.c
 hud.o: $(SRC)hud.c
 	$(CC) $(CFLAGS) $< -c -I $(INC) -o $(OBJ)$@
 
+glyph.o: $(SRC)glyph.c
+	$(CC) $(CFLAGS) $< -c -I $(INC) -o $(OBJ)$@
+
 utils.o: $(SRC)utils.c
 	$(CC) $(CFLAGS) $< -c -I $(INC) -o $(OBJ)$@
 
@@ -50,4 +57,4 @@ debug.o: $(SRC)debug.c
 	$(CC) $(CFLAGS) $< -c -I $(INC) -o $(OBJ)$@
 
 clean:
-	rm $(BIN)* $(OBJ)*
+	rm -rf $(BIN) $(OBJ)
