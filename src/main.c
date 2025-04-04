@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <time.h>
+#include <unistd.h>
 #include "constants.h"
 #include "engine.h"
 #include "entity.h"
@@ -117,11 +118,34 @@ int main(int argc, char *argv[]){
     Mix_Music *level2_music_intro = LoadMusic("1-09. Bad Here Day (Shield Interior Intro Version).mp3");
     Mix_Music *level3_music_intro = LoadMusic("1-05. Best Guess at Best (Shield World Intro Version).mp3");
     Mix_Music *level4_music_intro = LoadMusic("1-07. Fingerprints are Broken (Harvest Intro Version).mp3");*/
-    Mix_Music *level1_music = LoadMusic("05 Flollo.mp3");
-    Mix_Music *level2_music = LoadMusic("17 Best Guess At Best.mp3");
-    Mix_Music *level3_music = LoadMusic("10 Six-Armed Robbing Suit.mp3");
-    Mix_Music *level4_music = LoadMusic("11 Action Figure Hands.mp3");
-    Mix_Music *level0_music = LoadMusic(".Battotai - Imperial Japanese Army March.mp3");
+    Mix_Music *level1_music = NULL; //LoadMusic("05 Flollo.mp3");
+    Mix_Music *level2_music = NULL; //LoadMusic("17 Best Guess At Best.mp3");
+    Mix_Music *level3_music = NULL; //LoadMusic("10 Six-Armed Robbing Suit.mp3");
+    Mix_Music *level4_music = NULL; //LoadMusic("11 Action Figure Hands.mp3");
+    Mix_Music *level0_music = NULL; //LoadMusic(".Battotai - Imperial Japanese Army March.mp3");
+    // LEVEL 1
+    if (access("assets/musics/05 Flollo.flac", F_OK) == 0)
+        level1_music = LoadMusic("05 Flollo.flac");
+    else if (access("assets/musics/05 Flollo.mp3", F_OK) == 0)
+        level1_music = LoadMusic("05 Flollo.mp3");
+    // LEVEL 2
+    if (access("assets/musics/17 Best Guess At Best.flac", F_OK) == 0)
+        level2_music = LoadMusic("17 Best Guess At Best.flac");
+    else if (access("assets/musics/17 Best Guess At Best.mp3", F_OK) == 0)
+        level2_music = LoadMusic("17 Best Guess At Best.mp3");
+    // LEVEL 3
+    if (access("assets/musics/10 Six-Armed Robbing Suit.flac", F_OK) == 0)
+        level3_music = LoadMusic("10 Six-Armed Robbing Suit.flac");
+    else if (access("assets/musics/10 Six-Armed Robbing Suit.mp3", F_OK) == 0)
+        level3_music = LoadMusic("10 Six-Armed Robbing Suit.mp3");
+    // LEVEL 4
+    if (access("assets/musics/11 Action Figure Hands.flac", F_OK) == 0)
+        level4_music = LoadMusic("11 Action Figure Hands.flac");
+    else if (access("assets/musics/11 Action Figure Hands.mp3", F_OK) == 0)
+        level4_music = LoadMusic("11 Action Figure Hands.mp3");
+    // LEVEL 0
+    if (access("assets/musics/.Battotai - Imperial Japanese Army March.mp3", F_OK) == 0)
+        level1_music = LoadMusic(".Battotai - Imperial Japanese Army March.mp3");
     // SOLIDS
     Solid *score_title;
     Solid *cursor = CreateSolid(rect(0, 0, 32, 32, 1), VOID, "crosshair.png");
