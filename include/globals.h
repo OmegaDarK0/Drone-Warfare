@@ -2,24 +2,33 @@
 #define GLOBALS_H
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 
-extern unsigned long int seed;
+#ifdef DEFINE_GLOBALS
+  #define EXTERN
+#else
+  #define EXTERN extern
+#endif
 
-extern int entity_count;
-extern int summon_delay;
-extern int summon_delay_max;
-extern int score;
+EXTERN unsigned long int seed;
+EXTERN int entity_count;
+EXTERN int summon_delay;
+EXTERN int summon_delay_max;
+EXTERN int score;
 
-extern SDL_bool running;
-extern SDL_bool debug;
-extern SDL_Texture *debug_hitbox;
-extern SDL_Window *window;
-extern SDL_Renderer *renderer;
+EXTERN SDL_bool running;
+EXTERN SDL_bool debug;
+EXTERN SDL_Texture *debug_hitbox;
+EXTERN SDL_Window *window;
+EXTERN SDL_Renderer *renderer;
 
-extern int font_small;
-extern int font_medium;
-extern int font_large;
-extern int font_xxl;
-extern int font_jumbo;
+EXTERN int font_small;
+EXTERN int font_medium;
+EXTERN int font_large;
+EXTERN int font_xxl;
+EXTERN int font_jumbo;
 
-#endif /* GLOBALS_H */
+#undef EXTERN
+
+#endif // GLOBALS_H
+

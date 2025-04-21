@@ -23,6 +23,7 @@ struct EntityList{
 };
 
 struct Entity{
+    // CORE
     _Bool AI;
     int AI_lifetime;
     int ID;
@@ -40,6 +41,7 @@ struct Entity{
     int aim_delay;
     int precision;
     int stability;
+    _Bool aiming;
     // MIDDLE
     int elementary;
     int effect;
@@ -53,7 +55,9 @@ struct Entity{
     int reverse_frame_mode;
     int num_frames;
     int num_sounds;
+    int extended_frames;
     SDL_FRect hitbox;
+    SDL_FRect target;
     SDL_Texture **frames;
     SDL_Texture **frames_highlighted;
     SDL_Texture *frame_dead;
@@ -69,6 +73,7 @@ struct TexturePack {
     char *name;
     int num_frames;
     int reverse_frame_mode;
+    int extended_frames;
 };
 
 struct SoundPack {
@@ -83,4 +88,5 @@ struct Solid {
     SDL_Color color;
 };
 
-#endif //STRUCTURES_H
+#endif // STRUCTURES_H
+

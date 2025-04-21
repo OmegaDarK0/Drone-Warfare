@@ -1,10 +1,12 @@
 #ifndef GLYPH_H
 #define GLYPH_H
-#include <SDL2/SDL_surface.h>
+
+#include <SDL2/SDL.h>
 
 void CreateGlyphs();
 void ClearGlyphs();
 void RenderGlyphs();
-SDL_Surface *GetGlyph(char c);
+SDL_Surface *GetGlyph(const char c);
 
-#endif //GLYPH_H
+#endif // GLYPH_H
+

@@ -3,11 +3,12 @@
 
 #include "structures.h"
 
-EntityList* CreateEntityList();
+EntityList* CreateEntityList(void);
 void AddEntity(EntityList *list, Entity *entity);
 void RemoveEntity(EntityList *list, const Entity *entity);
 void DestroyEntityList(EntityList *list);
 void ClearEntityList(EntityList *list);
-void IterateEntities(const EntityList *list, void (*func)(Entity *));
+void IterateEntities(const EntityList *list, void (*func)(const Entity*));
 
 #endif // ENTITY_LIST_H
+

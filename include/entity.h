@@ -12,12 +12,16 @@ void DisplayEntity(const Entity *entity);
 void MoveEntity(Entity *entity, _Bool pass);
 void MoveEntityAndCursor(Entity *entity, _Bool pass, int cursor_x, int cursor_y);
 void SummonEntity(Entity *entity, int lifetime, float x, float y);
-void EntityShoot(Entity *entity, EntityList *projectiles, const Entity *ammo, float x, float y, float w, float h);
+void DisplayEntityLaserBeam(const Entity *entity);
+
+void EntityCease(Entity *entity);
 void EntityAim(Entity *entity, float x, float y, float w, float h);
+void EntityShoot(Entity *entity, EntityList *projectiles, const Entity *ammo, float x, float y, float w, float h);
 void EntityIntercept(Entity *entity, float x, float y, float w, float h);
 void HandleCollision(Entity **entity1, Entity **entity2);
 void DisableEntityAI(Entity *entity);
 void EnableEntityAI(Entity *entity, int lifetime);
+
 _Bool AreEntitiesNear(const Entity *entity1, const Entity *entity2, double threshold);
 _Bool AreEntitiesFar(const Entity *entity1, const Entity *entity2, double threshold);
 _Bool IsEntityAIEnabled(const Entity *entity);
@@ -25,4 +29,5 @@ _Bool IsEntityAIDisabled(const Entity *entity);
 _Bool IsEntityAlive(const Entity *entity);
 _Bool IsEntityDead(const Entity *entity);
 
-#endif /* ENTITY_H */
+#endif // ENTITY_H
+
