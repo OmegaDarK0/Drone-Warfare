@@ -1,28 +1,39 @@
 #include "hud.h"
-#include <stdio.h>
 #include "constants.h"
-#include "engine.h"
+#include "graphics.h"
 #include "globals.h"
 #include "utils.h"
+#include "images.h"
+#include "ui.h"
+#include <stdio.h>
+#include <math.h>
 
-//SDL_Texture *hitpoints_text;
-//SDL_Texture *score_text;
 Solid *hitpoints_info;
 Solid *score_info;
 
 SDL_Rect hitpoints_rect;
 SDL_Rect hitpoints_max_rect;
 
-void InitHUD() {
-    hitpoints_rect = rect(scale_width(120), BORDER_OFFSET + 7, 100, 40, 1);
-    hitpoints_max_rect = rect(0, BORDER_OFFSET + 7, 0, 40, 1);
+void ClearHUD(void){
+    DestroySolid(hitpoints_info);
+    DestroySolid(score_info);
 }
 
-void DisplayHUD(const Entity *entity){
-    if (!entity->effect){
+void InitHUD(void) {
+    hitpoints_rect = rect(scale_width(120), BORDER_OFFSET + 7, 100, 40, 1);
+    hitpoints_max_rect = rect(0, BORDER_OFFSET + 7, 0, 40, 1);
+    hitpoints_info = CreateSolidText(rect(BORDER_OFFSET, BORDER_OFFSET, 1, 1, 0), WHITE, "HP", font_large, WHITE);
+    score_info = CreateSolidText(rect(BORDER_OFFSET, HEIGHT - HEIGHT * 50 / 1080 - BORDER_OFFSET, 1, 1, 0), WHITE, "SCORE: 0", 45, WHITE);
+    // Vous pouvez initialiser ici hitpoints_info et score_info, par exemple :
+    // hitpoints_info = CreateSolid(hitpoints_rect, color(0, 255, 0, 255), "HP");
+    // score_info = CreateSolidText(...);
+}
+
+void DisplayHUD(const Entity *entity) {
+    if (!entity->effect) {
         hitpoints_rect.w = scale_width((int)entity->hitpoints);
         hitpoints_max_rect.x = scale_width((int)entity->hitpoints) + hitpoints_rect.x;
-        hitpoints_max_rect.w = scale_width((int)entity->hitpoints_max - (int)entity->hitpoints);
+        hitpoints_max_rect.w = scale_width((int)(entity->hitpoints_max - entity->hitpoints));
         DrawRect(hitpoints_rect, 0, 255, 0, 255);
         DrawRect(hitpoints_max_rect, 255, 0, 0, 255);
         DrawText(hitpoints_info, 0);
@@ -30,22 +41,23 @@ void DisplayHUD(const Entity *entity){
     }
 }
 
-void DisplayEffect(const Entity *entity){
+void DisplayEffect(const Entity *entity) {
     SDL_Rect R = rect(0, 0, 10, 10, 1);
     for (int i = 0; i < entity->effect * 10; i++) {
         R.x = randint(0, WIDTH - 10);
         R.y = randint(0, HEIGHT - 10);
-        DrawRect(R, randint(0, 255), randint(0, 255), randint(0, 255), 255);
+        DrawRect(R, randint(0,255), randint(0,255), randint(0,255), 255);
     }
 }
 
-void RenderScore() {
+void RenderScore(void) {
     char score_str[16];
     sprintf(score_str, "SCORE: %d", score);
     score_info->texture = LoadTextureFromText(score_str, font_large, WHITE);
 }
 
-void GainScore(const Entity *entity, const int difficulty){
+void GainScore(const Entity *entity, const int difficulty) {
     score += 5 * (int)pow(2, entity->category) * (entity->prestige + 1) * difficulty;
     RenderScore();
 }
+

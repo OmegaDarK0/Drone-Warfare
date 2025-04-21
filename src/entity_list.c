@@ -1,8 +1,7 @@
-#include <stdlib.h>
 #include "entity_list.h"
+#include <stdlib.h>
 
-// Initialize a new entity list
-EntityList* CreateEntityList() {
+EntityList* CreateEntityList(void) {
     EntityList *list = malloc(sizeof(EntityList));
     if (list) {
         list->head = NULL;
@@ -11,7 +10,6 @@ EntityList* CreateEntityList() {
     return list;
 }
 
-// Add an entity to the list
 void AddEntity(EntityList *list, Entity *entity) {
     EntityNode *newNode = malloc(sizeof(EntityNode));
     if (newNode) {
@@ -22,28 +20,25 @@ void AddEntity(EntityList *list, Entity *entity) {
     }
 }
 
-// Remove an entity from the list
 void RemoveEntity(EntityList *list, const Entity *entity) {
     EntityNode *current = list->head;
-    EntityNode *previous = NULL;
+    EntityNode *prev = NULL;
     while (current) {
-        if (current->entity == entity){
-            if (previous) {
-                previous->next = current->next;
-            } else {
+        if (current->entity == entity) {
+            if (prev)
+                prev->next = current->next;
+            else
                 list->head = current->next;
-            }
             free(current->entity);
             free(current);
             list->count--;
             return;
         }
-        previous = current;
+        prev = current;
         current = current->next;
     }
 }
 
-// Free the entire entity list
 void DestroyEntityList(EntityList *list) {
     EntityNode *current = list->head;
     while (current) {
@@ -67,8 +62,7 @@ void ClearEntityList(EntityList *list) {
     list->count = 0;
 }
 
-// Iterate over the entities in the list and apply a function to each
-void IterateEntities(const EntityList *list, void (*func)(Entity *)) {
+void IterateEntities(const EntityList *list, void (*func)(const Entity*)) {
     const EntityNode *current = list->head;
     while (current) {
         func(current->entity);
