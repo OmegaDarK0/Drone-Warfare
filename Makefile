@@ -1,60 +1,97 @@
+# Répertoires
 SRC = ./src/
 INC = ./include/
 OBJ = ./build/
 BIN = ./bin/
 LIB = ./lib/
 
-CC = gcc
-CFLAGS = -Wall -std=c11
-LFLAGS = -Bstatic -lSDL2 -lSDL2_image -lSDL2_mixer -Bdynamic -lm -ldl
+# Nom de l'exécutable
 EXEC = DroneWarfare
 
-.PHONY: all run clean
+# Compilateur et flags
+CC = gcc
+CFLAGS = -Wall -std=c11 -I$(INC)
+LFLAGS = -Bstatic -lSDL2 -lSDL2_image -lSDL2_mixer -Bdynamic -lm -ldl
 
-all: setup $(EXEC)
+# Liste des fichiers objets (ajustez selon vos modules)
+OBJS = \
+	$(OBJ)main.o \
+	$(OBJ)engine.o \
+	$(OBJ)graphics.o \
+	$(OBJ)entity.o \
+	$(OBJ)entity_list.o \
+	$(OBJ)resource_pack.o \
+	$(OBJ)hud.o \
+	$(OBJ)glyph.o \
+	$(OBJ)ui.o \
+	$(OBJ)utils.o \
+	$(OBJ)score.o \
+	$(OBJ)audio.o \
+	$(OBJ)images.o
+# Ajoutez $(OBJ)debug.o si nécessaire.
 
+.PHONY: all run clean setup
+
+all: setup $(BIN)$(EXEC)
+
+# Création des dossiers cibles
 setup:
 	mkdir -p $(BIN)
 	mkdir -p $(OBJ)
 
-run: $(EXEC)
-	$(BIN)$<
+# Règle de liaison
+$(BIN)$(EXEC): $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) -L$(LIB) -o $(BIN)$(EXEC) $(LFLAGS)
 
-$(EXEC): main.o engine.o entity.o entity_list.o resource.o hud.o glyph.o utils.o globals.o constants.o debug.o
-	$(CC) $(CFLAGS) $(OBJ)* -I $(INC) -L $(LIB) -o $(BIN)$@ $(LFLAGS)
+# Règles de compilation
+$(OBJ)main.o: $(SRC)main.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-main.o: $(SRC)main.c
-	$(CC) $(CFLAGS) $< -c -I $(INC) -o $(OBJ)$@
+$(OBJ)engine.o: $(SRC)engine.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-engine.o: $(SRC)engine.c
-	$(CC) $(CFLAGS) $< -c -I $(INC) -o $(OBJ)$@
+$(OBJ)entity.o: $(SRC)entity.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-entity.o: $(SRC)entity.c
-	$(CC) $(CFLAGS) $< -c -I $(INC) -o $(OBJ)$@
+$(OBJ)graphics.o: $(SRC)graphics.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-entity_list.o: $(SRC)entity_list.c
-	$(CC) $(CFLAGS) $< -c -I $(INC) -o $(OBJ)$@
+$(OBJ)entity_list.o: $(SRC)entity_list.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-resource.o: $(SRC)resource.c
-	$(CC) $(CFLAGS) $< -c -I $(INC) -o $(OBJ)$@
+$(OBJ)resource_pack.o: $(SRC)resource_pack.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-hud.o: $(SRC)hud.c
-	$(CC) $(CFLAGS) $< -c -I $(INC) -o $(OBJ)$@
+$(OBJ)hud.o: $(SRC)hud.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-glyph.o: $(SRC)glyph.c
-	$(CC) $(CFLAGS) $< -c -I $(INC) -o $(OBJ)$@
+$(OBJ)glyph.o: $(SRC)glyph.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-utils.o: $(SRC)utils.c
-	$(CC) $(CFLAGS) $< -c -I $(INC) -o $(OBJ)$@
+$(OBJ)ui.o: $(SRC)ui.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-globals.o: $(SRC)globals.c
-	$(CC) $(CFLAGS) $< -c -I $(INC) -o $(OBJ)$@
+$(OBJ)utils.o: $(SRC)utils.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-constants.o: $(SRC)constants.c
-	$(CC) $(CFLAGS) $< -c -I $(INC) -o $(OBJ)$@
+$(OBJ)score.o: $(SRC)score.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-debug.o: $(SRC)debug.c
-	$(CC) $(CFLAGS) $< -c -I $(INC) -o $(OBJ)$@
+$(OBJ)audio.o: $(SRC)audio.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
+$(OBJ)images.o: $(SRC)images.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Optionnel : si vous disposez d'un module debug
+$(OBJ)debug.o: $(SRC)debug.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Règle pour lancer l'exécutable
+run: $(BIN)$(EXEC)
+	$(BIN)$(EXEC)
+
+# Nettoyage des dossiers de build et de binaires
 clean:
-	rm -rf $(BIN) $(OBJ)
+	rm -rf $(OBJ) $(BIN)
+
