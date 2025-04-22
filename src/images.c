@@ -49,7 +49,7 @@ SDL_Texture *LoadTextureFromImage(SDL_Surface *surface) {
 SDL_Surface *LoadText(const char *text, const int size, const SDL_Color color) {
     // Exemple simplifié : création d'une surface via des glyphes (fonction GetGlyph doit être définie dans le module Glyph)
     const int n = (int)strlen(text);
-    const int scaled_size = size;
+    const int scaled_size = scale_width(size);
     const int char_width = scaled_size;
     const int char_height = scaled_size;
     const int width = char_width * n + scaled_size * n / 8;
