@@ -57,7 +57,7 @@ void RenderScore(void) {
 }
 
 void GainScore(const Entity *entity, const int difficulty) {
-    score += 5 * (int)pow(2, entity->category) * (entity->prestige + 1) * difficulty;
+    score += 5 * (int)pow(2, entity->type) * (entity->prestige + 1) * difficulty;
     RenderScore();
 }
 

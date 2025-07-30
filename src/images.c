@@ -6,6 +6,7 @@
 #include <SDL2/SDL_image.h>
 #include <stdio.h>
 #include <string.h>
+#include <utils.h>
 
 SDL_Surface *CreateImage(const int width, const int height) {
     SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormat(0, width, height, 32, SDL_PIXELFORMAT_RGBA32);
@@ -39,7 +40,7 @@ SDL_Texture *LoadTexture(const char *filename) {
 
 SDL_Texture *LoadTextureFromImage(SDL_Surface *surface) {
     SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
+    UnloadImage(surface);
     if (!texture) {
         SDL_Log("SDL_CreateTextureFromSurface: %s", SDL_GetError());
     }
