@@ -1,7 +1,6 @@
 #include "score.h"
 #include "globals.h"    // Pour la variable globale 'score'
 #include <stdio.h>
-#include <time.h>
 #include <SDL2/SDL.h>   // Pour SDL_Log()
 
 void RegisterScore(const char *player_name, const int difficulty) {
@@ -10,8 +9,14 @@ void RegisterScore(const char *player_name, const int difficulty) {
         SDL_Log("Erreur d'ouverture du fichier score.txt");
         return;
     }
-    const time_t now = time(NULL);
-    // Ecrit une ligne sous la forme : timestamp, nom_du_joueur, difficulté, score
-    fprintf(file, "%ld,%s,%d,%d\n", now, player_name, difficulty, score);
+    fprintf(file, "%s : %d", player_name, score);
+    switch (difficulty) {
+        case 1: fprintf(file, " | EASY\n"); break;
+        case 2: fprintf(file, " | MEDIUM\n"); break;
+        case 3: fprintf(file, " | HARD\n"); break;
+        case 4: fprintf(file, " | HARDER\n"); break;
+        case 5: fprintf(file, " | INSANE\n"); break;
+        default: fprintf(file, "\n");
+    }
     fclose(file);
 }

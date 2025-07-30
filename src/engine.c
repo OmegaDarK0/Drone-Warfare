@@ -14,14 +14,14 @@ int QuitEngine(){
     Mix_CloseAudio();
     Mix_Quit();
     IMG_Quit();
-    SDL_QuitSubSystem(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER);
+    //SDL_QuitSubSystem(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER);
     SDL_Quit();
     return -1;
 }
 
 int InitEngine() {
     SDL_DisplayMode dm;
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER) < 0) {
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         SDL_Log("SDL_Init: %s", SDL_GetError());
         return QuitEngine();
     }

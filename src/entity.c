@@ -16,9 +16,10 @@ Entity *CreateEntity(void) {
     entity->AI = 0;
     entity->AI_lifetime = 0;
     entity->ID = entity_count++;
-    entity->frames = NULL;
+    /*entity->frames = NULL;
     entity->frames_highlighted = NULL;
-    entity->frame_dead = NULL;
+    entity->frame_dead = NULL;*/
+    entity->texture_pack = NULL;
     entity->mark = NULL;
     entity->sounds = NULL;
     entity->projectiles = NULL;
@@ -43,7 +44,7 @@ void InitEntity(Entity *entity, const float width, const float height, const int
     entity->elementary = 0;
     entity->effect = 0;
     entity->highlight = 0;
-    entity->category = category;
+    entity->type = category;
     entity->prestige = 0;
     entity->frame_time = (int)(REFRESH_RATE / 20.0); // TIME = 20 (par exemple)
     entity->frame_delay = 0;
@@ -76,20 +77,22 @@ void CloneEntity(Entity *clone, const Entity *entity) {
     clone->elementary = entity->elementary;
     clone->effect = entity->effect;
     clone->highlight = entity->highlight;
-    clone->category = entity->category;
+    clone->type = entity->type;
     clone->prestige = entity->prestige;
     clone->frame_time = entity->frame_time;
     clone->frame_delay = entity->frame_delay;
     clone->frame_index = entity->frame_index;
-    clone->reverse_frame_mode = entity->reverse_frame_mode;
-    clone->num_frames = entity->num_frames;
+    //clone->reverse_frame_mode = entity->reverse_frame_mode;
+    //clone->num_frames = entity->num_frames;
+    clone->current_animation = entity->current_animation;
     clone->num_sounds = entity->num_sounds;
-    clone->extended_frames = entity->extended_frames;
+    //clone->extended_frames = entity->extended_frames;
     clone->hitbox = entity->hitbox;
     clone->target = entity->target;
-    clone->frames = entity->frames;
-    clone->frames_highlighted = entity->frames_highlighted;
-    clone->frame_dead = entity->frame_dead;
+    //clone->frames = entity->frames;
+    //clone->frames_highlighted = entity->frames_highlighted;
+    //clone->frame_dead = entity->frame_dead;
+    clone->texture_pack = entity->texture_pack;
     clone->mark = entity->mark;
     clone->sounds = entity->sounds;
     clone->projectiles = entity->projectiles;
@@ -110,16 +113,16 @@ void UpdateEntityState(Entity *entity) {
     }
     if (!entity->frame_delay) {
         entity->frame_delay = entity->frame_time;
-        if (entity->extended_frames)
-            entity->frame_delay += (int)(0.5 * entity->frame_time * entity->velocity_y);
-        if (entity->reverse_frame_mode == 0 && ++entity->frame_index == entity->num_frames)
+        /*if (entity->extended_frames)
+            entity->frame_delay += (int)(0.5 * entity->frame_time * entity->velocity_y);*/
+        if (entity->texture_pack->animations[entity->current_animation]->reverse_frame_mode == 0 && ++entity->frame_index == entity->texture_pack->animations[entity->current_animation]->num_frames)
             entity->frame_index = 0;
-        else if (entity->reverse_frame_mode > 0 && ++entity->frame_index == entity->num_frames) {
+        else if (entity->texture_pack->animations[entity->current_animation]->reverse_frame_mode > 0 && ++entity->frame_index == entity->texture_pack->animations[entity->current_animation]->num_frames) {
             entity->frame_index--;
-            entity->reverse_frame_mode *= -1;
-        } else if (entity->reverse_frame_mode < 0 && --entity->frame_index == -1) {
+            entity->texture_pack->animations[entity->current_animation]->reverse_frame_mode *= -1;
+        } else if (entity->texture_pack->animations[entity->current_animation]->reverse_frame_mode < 0 && --entity->frame_index == -1) {
             entity->frame_index++;
-            entity->reverse_frame_mode *= -1;
+            entity->texture_pack->animations[entity->current_animation]->reverse_frame_mode *= -1;
         }
     } else {
         entity->frame_delay--;
@@ -132,53 +135,85 @@ void UpdateEntityState(Entity *entity) {
         entity->highlight--;
 }
 
-void DisplayEntity(const Entity *entity) {
-    // Vérifier que l'entité n'est pas NULL pour éviter d'accéder à un pointeur invalide.
-    if (!entity)
-        return;
-    // Calculer une seule fois la conversion de la hitbox pour éviter des appels répétés.
-    const SDL_Rect rect = FRectToRect(entity->hitbox);
-    // S'assurer que frame_index est dans les bornes pour éviter un accès hors-limites.
+/* ----------------------------------------------------------------------------
+ * RenderEntity
+ *
+ * Détermine la texture à afficher :
+ *   - Si l'entité n'est PAS vivante et qu'une animation de mort existe, on affiche
+ *     la texture spécifique de mort.
+ *   - Sinon, on affiche l'animation courante :
+ *       * Si le flag 'highlight' est activé et que des frames highlighted existent,
+ *         on les affiche.
+ *       * Sinon on affiche la frame de base.
+ * ----------------------------------------------------------------------------
+ */
+SDL_Texture* RenderEntity(const Entity *entity) {
+    if (!entity || !entity->texture_pack) {
+        fprintf(stderr, "RenderEntity: entity ou texturePack est NULL.\n");
+        return NULL;
+    }
+
+    /* Si l'entité est morte et une animation de mort existe */
+    if (!IsEntityAlive(entity) && entity->texture_pack->animations[ANIM_DEATH]) {
+        const AnimationPack *deathPack = entity->texture_pack->animations[ANIM_DEATH];
+        return deathPack->specific_texture;
+    }
+
+    /* Récupération de l'animation courante.
+     * S'il n'y a pas d'animation pour l'état courant, on bascule sur idle.
+     */
+    AnimationPack *animPack = entity->texture_pack->animations[entity->current_animation];
+    if (!animPack) {
+        animPack = entity->texture_pack->animations[ANIM_IDLE];
+        if (!animPack) {
+            fprintf(stderr, "RenderEntity : aucune animation disponible.\n");
+            return NULL;
+        }
+    }
+
     int idx = entity->frame_index;
-    if (idx < 0 || idx >= entity->num_frames)
-        idx = 0;  // On peut opter pour un index par défaut ou logger l'erreur.
-    // Début du dessin en fonction de l'état de l'entité.
-    if (IsEntityAlive(entity)) {
-        // Si l'entité utilise des extended_frames et qu'elle doit être surlignée.
-        if (entity->extended_frames && entity->highlight) {
-            // Vérifier que le tableau des textures surlignées est bien alloué et que la texture existe.
-            if (entity->frames_highlighted && entity->frames_highlighted[idx]) {
-                DrawTexture(entity->frames_highlighted[idx], rect);
-            }
-            // Sinon, on retombe sur le tableau classique, en s'assurant qu'il est valide.
-            else if (entity->frames && entity->frames[idx]) {
-                DrawTexture(entity->frames[idx], rect);
-            }
-            // Si aucune texture n'est valide, dessiner un rectangle de fallback.
-            else {
-                DrawRectF(entity->hitbox, 255, 255, 255, 255);
-            }
-        }
-        // Si l'entité n'est pas en extended_frames ou ne demande pas de surlignage.
-        else if (entity->frames && entity->frames[idx]) {
-            DrawTexture(entity->frames[idx], rect);
-        }
-        else {
-            DrawRectF(entity->hitbox, 255, 255, 255, 255);
-        }
+    if (idx < 0 || idx >= animPack->num_frames) {
+        fprintf(stderr, "RenderEntity: frame_index (%d) hors limites. Correction à 0.\n", idx);
+        idx = 0;
     }
-    // Cas où l'entité n'est pas vivante.
-    else if (entity->extended_frames) {
-        if (entity->frame_dead)
-            DrawTexture(entity->frame_dead, rect);
-        else
-            DrawRectF(entity->hitbox, 255, 255, 255, 255);
+
+    /* Si highlight est activé et la version highlighted existe */
+    if (entity->highlight && animPack->frames_highlighted && animPack->frames_highlighted[idx]) {
+        return animPack->frames_highlighted[idx];
     }
-    // Dessiner la marque associée, si présente.
+
+    /* Sinon, retourne la frame de base */
+    if (animPack->frames && animPack->frames[idx])
+        return animPack->frames[idx];
+
+    return NULL;
+}
+
+/* ----------------------------------------------------------------------------
+ * DisplayEntity
+ *
+ * Convertit la hitbox et dessine l'entité.
+ * Si aucune texture n'est disponible, dessine un rectangle blanc.
+ * Affiche également la texture de la marque (mark) si présente.
+ * ----------------------------------------------------------------------------
+ */
+void DisplayEntity(const Entity *entity) {
+    if (!entity) {
+        fprintf(stderr, "DisplayEntity: entity est NULL.\n");
+        return;
+    }
+
+    const SDL_Rect rect = FRectToRect(entity->hitbox);
+    SDL_Texture *currentTexture = RenderEntity(entity);
+
+    if (currentTexture)
+        DrawTexture(currentTexture, rect);
+    else
+        DrawRectF(entity->hitbox, 255, 255, 255, 255);
+
     if (entity->mark)
         DrawTexture(entity->mark, rect);
 }
-
 
 void MoveEntity(Entity *entity, const _Bool pass) {
     double x = entity->velocity_x * entity->speed, y = entity->velocity_y * entity->speed;
@@ -214,7 +249,7 @@ void SummonEntity(Entity *entity, const int lifetime, const float x, const float
 }
 
 void DisplayEntityLaserBeam(const Entity *entity){
-    if (entity->aiming){
+    if (IsEntityAlive(entity) && entity->aiming){
         const int xa = (int)(entity->hitbox.x + entity->hitbox.w / 2.0);
         const int ya = (int)(entity->hitbox.y + entity->hitbox.h / 2.0);
         const int xb = (int)(entity->target.x + entity->target.w / 2.0);
