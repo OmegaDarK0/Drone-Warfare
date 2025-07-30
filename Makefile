@@ -12,9 +12,12 @@ else
 	endif
 endif
 
+# Forcer un nom simple pour MAKE pour éviter les problèmes de guillemets
+MAKE := make
+
 # Définition d'un flag de liaison spécifique au système
 ifeq ($(PLATFORM),windows)
-	SYS_LFLAGS = -lmingw32
+	SYS_LFLAGS = -lmingw32 -mwindows
 else ifeq ($(PLATFORM),linux)
 	SYS_LFLAGS = -ldl
 else
@@ -118,10 +121,10 @@ help:
 # Règle conditionnelle pour copier les DLL sous Windows après la compilation
 ifeq ($(PLATFORM),windows)
 postbuild:
-#	@echo "Copie des DLLs Windows dans bin/"
 	@cp $(LIB)*.dll $(BIN)
 else
 postbuild:
 	@true
 endif
+
 
