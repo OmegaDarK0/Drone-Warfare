@@ -1,13 +1,12 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_mixer.h>
+#include "structures.h"
 
 #ifdef DEFINE_GLOBALS
-  #define EXTERN
+#define EXTERN
 #else
-  #define EXTERN extern
+#define EXTERN extern
 #endif
 
 EXTERN unsigned long int seed;
@@ -28,7 +27,14 @@ EXTERN int font_large;
 EXTERN int font_xxl;
 EXTERN int font_jumbo;
 
+// Déclaration de la variable globale ResourceManager
+EXTERN ResourceManager res;
+
+// Autres variables globales nécessaires
+EXTERN _Bool easter_egg;
+EXTERN SDL_bool key_up, key_down, key_left, key_right, key_mouse, key_pause, text_input;
+EXTERN char player_name[9];
+
 #undef EXTERN
 
 #endif // GLOBALS_H
-

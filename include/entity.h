@@ -8,6 +8,7 @@ void InitEntity(Entity *entity, float width, float height, int category, double 
 void CloneEntity(Entity *clone, const Entity *entity);
 void DestroyEntity(Entity *entity);
 void UpdateEntityState(Entity *entity);
+SDL_Texture* RenderEntity(const Entity *entity);
 void DisplayEntity(const Entity *entity);
 void MoveEntity(Entity *entity, _Bool pass);
 void MoveEntityAndCursor(Entity *entity, _Bool pass, int cursor_x, int cursor_y);
