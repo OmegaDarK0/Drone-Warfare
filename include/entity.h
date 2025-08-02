@@ -23,6 +23,12 @@ void HandleCollision(Entity **entity1, Entity **entity2);
 void DisableEntityAI(Entity *entity);
 void EnableEntityAI(Entity *entity, int lifetime);
 
+void ProcessDroneAI(Entity *e);
+void UpdateEntities(void);
+void UpdateProjectiles(EntityList *projectiles);
+void CheckCollisions(void);
+void HandleSummonLogic(void);
+
 _Bool AreEntitiesNear(const Entity *entity1, const Entity *entity2, double threshold);
 _Bool AreEntitiesFar(const Entity *entity1, const Entity *entity2, double threshold);
 _Bool IsEntityAIEnabled(const Entity *entity);

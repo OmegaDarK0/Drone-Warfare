@@ -3,23 +3,23 @@
 
 #include <SDL2/SDL.h>
 
-int scale_width(int w);
-int scale_height(int h);
-int scale_refresh_rate(int r);
+int ScaleWidth(int w);
+int ScaleHeight(int h);
+int ScaleRefreshRate(int r);
 
-int lcg_rand(void);
-int randint(int min, int max);
+int LCGRand(void);
+int RandInt(int min, int max);
 
-double distance(double xa, double ya, double xb, double yb);
+double Distance(double xa, double ya, double xb, double yb);
 
-SDL_Rect rect(int x, int y, int w, int h, _Bool autoscale);
-SDL_Color color(int r, int g, int b, int a);
+SDL_Rect Rect(int x, int y, int w, int h, _Bool autoscale);
+SDL_Color Color(int r, int g, int b, int a);
 
-void centered_abs(SDL_Rect *rect);
-void centered_ord(SDL_Rect *rect);
-void centered_coord(SDL_Rect *rect);
+void CenteredAbs(SDL_Rect *rect);
+void CenteredOrd(SDL_Rect *rect);
+void CenteredCoord(SDL_Rect *rect);
 
-int file_exists(const char *filename);
+int FileExists(const char *filename);
 
 // Convertit un temps en secondes en nombre de frames
 int TimeToFrames(double seconds);

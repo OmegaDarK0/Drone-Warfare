@@ -6,7 +6,11 @@
 void CreateGlyphs();
 void ClearGlyphs();
 void RenderGlyphs();
-SDL_Surface *GetGlyph(const char c);
+SDL_Surface *GetGlyph(char c);
+void CreateGlyphsWS();
+void ClearGlyphsWS();
+void RenderGlyphsWS();
+SDL_Surface *GetGlyphWS(char c);
 
 #endif // GLYPH_H
 

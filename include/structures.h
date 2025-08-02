@@ -13,9 +13,13 @@ typedef struct EntityList EntityList;
 typedef struct AnimationPack AnimationPack;
 typedef struct TexturePack TexturePack;
 typedef struct SoundPack SoundPack;
-typedef struct ResourceManager ResourceManager;
+typedef struct ResourcePack ResourceManager;
 typedef struct Cursor Cursor;
 typedef struct Solid Solid;
+typedef struct PlayerInfo PlayerInfo;
+typedef struct EntityConfig EntityConfig;
+typedef struct LevelMenuEntry LevelMenuEntry;
+typedef struct DifficultyMenuEntry DifficultyMenuEntry;
 
 enum GameState{
     STATE_MENU,
@@ -126,18 +130,17 @@ struct SoundPack {
     int num_sounds;
 };
 
-// Définition du ResourceManager (ou mieux, inclure un header dédié si possible)
-struct ResourceManager{
-    SDL_Texture *sb_mark;
+struct ResourcePack{
+    SDL_Texture *explosive_mark;
     SDL_Texture *nova_mark;
     SDL_Texture *hunter_mark;
-    SDL_Texture *debug_hitbox;
+    SDL_Texture *entity_debug_hitbox;
 
-    SDL_Texture *level1;
-    SDL_Texture *level2;
-    SDL_Texture *level3;
-    SDL_Texture *level4;
-    SDL_Texture *level0;
+    SDL_Texture *level1_background;
+    SDL_Texture *level2_background;
+    SDL_Texture *level3_background;
+    SDL_Texture *level4_background;
+    SDL_Texture *level0_background;
 
     Mix_Music *level0_music;
     Mix_Music *level1_music;
@@ -145,14 +148,14 @@ struct ResourceManager{
     Mix_Music *level3_music;
     Mix_Music *level4_music;
 
-    TexturePack *black_drone_frames;
+    TexturePack *drone_frames;
     TexturePack *silver_drone_frames;
     TexturePack *gold_drone_frames;
     TexturePack *player_drone_frames;
     TexturePack *regular_bullet_frames;
     TexturePack *sniper_bullet_frames;
-    TexturePack *plasma_frames;
-    TexturePack *nova_frames;
+    TexturePack *plasma_orb_frames;
+    TexturePack *nova_orb_frames;
 
     SoundPack *magnum_pistol_sounds;
     SoundPack *plasma_pistol_sounds;
@@ -164,6 +167,39 @@ struct Solid {
     SDL_Texture *texture;
     SDL_Rect rect;
     SDL_Color color;
+};
+
+#define MAX_PLAYER_NAME_LENGTH 8
+
+struct PlayerInfo{
+    char name[MAX_PLAYER_NAME_LENGTH + 1];
+    int length;
+    Solid *title;
+};
+
+struct EntityConfig{
+    double HP;
+    double damage;
+    double m_damage;
+    double speed;
+    int rate_min;
+    int rate_max;
+    int precision;
+    int stability;
+};
+
+struct LevelMenuEntry{
+    SDL_Rect area;
+    Mix_Music *music;
+    SDL_Texture *background;
+    int level_id;  // Pour logique éventuelle
+};
+
+struct DifficultyMenuEntry{
+    SDL_Rect area;
+    int difficulty;
+    EntityConfig drone_config[4]; // DRONE, DRONE_SB, DRONE_NOVA, DRONE_HUNTER
+    int summon_delay;
 };
 
 #endif // STRUCTURES_H
