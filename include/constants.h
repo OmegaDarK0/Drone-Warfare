@@ -12,6 +12,10 @@ EXTERN int WIDTH;
 EXTERN int HEIGHT;
 EXTERN int REFRESH_RATE;
 
+EXTERN int FPS;
+EXTERN unsigned int FRAME_DELAY;
+EXTERN double DELTA_TIME;
+
 // Autres constantes
 #define BORDER_OFFSET 5
 
