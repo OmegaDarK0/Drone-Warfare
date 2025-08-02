@@ -13,7 +13,7 @@
 #include "globals.h"         // Variables globales (window, renderer, etc.)
 #include "constants.h"       // Constantes (dimensions, couleurs, etc.)
 #include "utils.h"           // Helpers de scaling, couleurs, etc.
-#include "score.h"
+#include "player.h"
 #include "entity.h"          // Création et gestion des entités
 #include "entity_list.h"     // Gestion de liste d'entités
 #include "hud.h"             // Affichage du HUD
@@ -22,18 +22,20 @@
 #include "ui.h"              // Gestion de l'interface (boutons, texte, curseur)
 #include "images.h"          // Chargement d'images & textures
 #include "audio.h"           // Chargement et lecture audio
+#include "menu.h"
+#include "input.h"
 
-void LoadAllResources(ResourceManager *res) {
-    res->sb_mark             = LoadTexture("sb.png");
-    res->nova_mark           = LoadTexture("nova.png");
-    res->hunter_mark         = LoadTexture("hunter.png");
-    res->debug_hitbox        = LoadTexture("debug.png");
+void LoadResourcePack(ResourceManager *res) {
+    res->explosive_mark             = LoadTexture("explosive_mark.png");
+    res->nova_mark           = LoadTexture("nova_mark.png");
+    res->hunter_mark         = LoadTexture("hunter_mark.png");
+    res->entity_debug_hitbox        = LoadTexture("debug.png");
 
-    res->level1              = LoadTexture("level1.png");
-    res->level2              = LoadTexture("level2.png");
-    res->level3              = LoadTexture("level3.png");
-    res->level4              = LoadTexture("level4.png");
-    res->level0              = LoadTexture(".Naval_ensign_of_the_Empire_of_Japan.png");
+    res->level1_background              = LoadTexture("level1.png");
+    res->level2_background              = LoadTexture("level2.png");
+    res->level3_background              = LoadTexture("level3.png");
+    res->level4_background              = LoadTexture("level4.png");
+    res->level0_background              = LoadTexture(".Naval_ensign_of_the_Empire_of_Japan.png");
 
     res->level1_music        = LoadMusic("05 Flollo.mp3");
     res->level2_music        = LoadMusic("17 Best Guess At Best.mp3");
@@ -41,14 +43,14 @@ void LoadAllResources(ResourceManager *res) {
     res->level4_music        = LoadMusic("11 Action Figure Hands.mp3");
     res->level0_music        = LoadMusic(".Battotai - Imperial Japanese Army March.mp3");
 
-    res->black_drone_frames  = CreateTexturePack("drone", RED, 1, 1);
+    res->drone_frames  = CreateTexturePack("drone", RED, 1, 1);
     res->silver_drone_frames = CreateTexturePack("silver_drone", RED, 1, 1);
     res->gold_drone_frames   = CreateTexturePack("gold_drone", RED, 1, 1);
     res->player_drone_frames = CreateTexturePack("silver_drone", BLUE, 1, 1);
     res->regular_bullet_frames = CreateTexturePack("regular_bullet", VOID, 0, 0);
     res->sniper_bullet_frames  = CreateTexturePack("sniper_bullet", VOID, 0, 0);
-    res->plasma_frames       = CreateTexturePack("plasma_orb", VOID, 0, 0);
-    res->nova_frames         = CreateTexturePack("nova", VOID, 0, 0);
+    res->plasma_orb_frames       = CreateTexturePack("plasma_orb", VOID, 0, 0);
+    res->nova_orb_frames         = CreateTexturePack("nova_orb", VOID, 0, 0);
 
     res->magnum_pistol_sounds = CreateSoundPack("magnum", 4);
     res->plasma_pistol_sounds = CreateSoundPack("plas_pistol_fire_reach", 3);
@@ -56,17 +58,17 @@ void LoadAllResources(ResourceManager *res) {
     res->sniper_rifle_sounds = CreateSoundPack("sniper_distant", 4);
 }
 
-void FreeAllResources(const ResourceManager *res) {
-    UnloadTexture(res->sb_mark);
+void FreeResourcePack(const ResourceManager *res) {
+    UnloadTexture(res->explosive_mark);
     UnloadTexture(res->nova_mark);
     UnloadTexture(res->hunter_mark);
-    UnloadTexture(res->debug_hitbox);
+    UnloadTexture(res->entity_debug_hitbox);
 
-    UnloadTexture(res->level1);
-    UnloadTexture(res->level2);
-    UnloadTexture(res->level3);
-    UnloadTexture(res->level4);
-    UnloadTexture(res->level0);
+    UnloadTexture(res->level1_background);
+    UnloadTexture(res->level2_background);
+    UnloadTexture(res->level3_background);
+    UnloadTexture(res->level4_background);
+    UnloadTexture(res->level0_background);
 
     UnloadMusic(res->level0_music);
     UnloadMusic(res->level1_music);
@@ -74,14 +76,14 @@ void FreeAllResources(const ResourceManager *res) {
     UnloadMusic(res->level3_music);
     UnloadMusic(res->level4_music);
 
-    DestroyTexturePack(res->black_drone_frames);
+    DestroyTexturePack(res->drone_frames);
     DestroyTexturePack(res->silver_drone_frames);
     DestroyTexturePack(res->gold_drone_frames);
     DestroyTexturePack(res->player_drone_frames);
     DestroyTexturePack(res->regular_bullet_frames);
     DestroyTexturePack(res->sniper_bullet_frames);
-    DestroyTexturePack(res->plasma_frames);
-    DestroyTexturePack(res->nova_frames);
+    DestroyTexturePack(res->plasma_orb_frames);
+    DestroyTexturePack(res->nova_orb_frames);
 
     DestroySoundPack(res->magnum_pistol_sounds);
     DestroySoundPack(res->plasma_pistol_sounds);
@@ -101,31 +103,24 @@ void UpdateCursorPosition(Solid *cursor) {
 // --------------------------------------------------------
 
 GameState game_state = STATE_MENU;
-SDL_bool running = SDL_TRUE;
-_Bool restart = 0;
-int difficulty = 0;
-int score = 0;
-SDL_Texture *background = NULL;
+SDL_bool game_running = SDL_TRUE;
+SDL_bool game_restart = SDL_FALSE;
+SDL_bool game_debug = SDL_FALSE;
+int game_difficulty = 0;
+int player_score = 0;
+
+SDL_Texture *current_background = NULL;
 Mix_Music *current_music = NULL;
 
-// (Autres variables globales utilisées par le code)
-Entity *player, *drone, *drone_sb, *drone_nova, *drone_hunter;
-Entity *regular_bullet, *sniper_bullet, *plasma, *nova;
-EntityList *ennemies;
-Solid *cursor, *button1, *button2, *button3, *button4, *button5;
-Solid *restart_button, *game_over_title, *pause_title, *player_name_title, *score_title;
-int font_small, font_medium, font_large, font_xxl, font_jumbo;
-SDL_Rect box1, box2, box3, box4;
-
 // Prototypes des fonctions d'initialisation, mise à jour, rendu et condition de transition pour chaque état
-void InitMenu(void);
-void UpdateMenu(void);
-void RenderMenu(void);
-int MenuShouldTransition(void);
+void InitLevelMenu(void);
+void UpdateLevelMenu(void);
+void RenderLevelMenu(void);
+int LevelMenuShouldTransition(void);
 
-void UpdateDifficulty(void);
-void RenderDifficulty(void);
-int DifficultyShouldTransition(void);
+void UpdateDifficultyMenu(void);
+void RenderDifficultyMenu(void);
+int DifficultyMenuShouldTransition(void);
 
 void InitGame(void);
 void UpdateGame(void);
@@ -146,12 +141,12 @@ int GameOverShouldTransition(void);
 // Implantations des fonctions d'état
 // --------------------------------------------------------
 
-void InitMenu(void) {
+void InitLevelMenu(void) {
     easter_egg = 0;
-    restart = 0;
-    difficulty = 0;
-    background = NULL;
-    score = 0;
+    game_restart = SDL_FALSE;
+    game_difficulty = SDL_FALSE;
+    current_background = NULL;
+    player_score = 0;
     entity_count = 0;
     summon_delay = TimeToFrames(3);
     key_pause = SDL_FALSE;
@@ -160,161 +155,79 @@ void InitMenu(void) {
     key_left = SDL_FALSE;
     key_right = SDL_FALSE;
     key_mouse = SDL_FALSE;
-    ClearEntityList(player->projectiles);
     ClearEntityList(ennemies);
-    player_name[0] = '\0';
-    player_name_title->texture = LoadTextureFromText("ENTER YOUR NAME", font_large, WHITE);
+    ResetPlayerInfo(&player_info);
+    DestroySolid(score_title);
     RenderScore();
     ResetVolumeMusic();
 }
 
-void UpdateMenu(void) {
+void UpdateLevelMenu(void) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_QUIT) {
-            running = SDL_FALSE;
+        if (event.type == SDL_QUIT ||
+           (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)) {
+            game_running = SDL_FALSE;
             return;
-        }
-        if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
-            running = SDL_FALSE;
+           }
         if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
-            if (cursor->rect.x == 0 && cursor->rect.y == 0) {
-                current_music = res.level0_music;
-                background = res.level0;
-                easter_egg = 1;
-            }
-            else if (HEIGHT / 5 <= cursor->rect.y && cursor->rect.y <= 7 * HEIGHT / 15) {
-                if (WIDTH / 5 <= cursor->rect.x && cursor->rect.x <= 2 * WIDTH / 5) {
-                    current_music = res.level1_music;
-                    background = res.level1;
-                }
-                else if (3 * WIDTH / 5 <= cursor->rect.x && cursor->rect.x <= 4 * WIDTH / 5) {
-                    current_music = res.level2_music;
-                    background = res.level2;
-                }
-            }
-            else if (3 * HEIGHT / 5 <= cursor->rect.y && cursor->rect.y <= 13 * HEIGHT / 15) {
-                if (WIDTH / 5 <= cursor->rect.x && cursor->rect.x <= 2 * WIDTH / 5) {
-                    current_music = res.level3_music;
-                    background = res.level3;
-                }
-                else if (3 * WIDTH / 5 <= cursor->rect.x && cursor->rect.x <= 4 * WIDTH / 5) {
-                    current_music = res.level4_music;
-                    background = res.level4;
-                }
-            }
+            const SDL_Point cursor_pos = { cursor->rect.x, cursor->rect.y };
+            HandleLevelSelection(cursor_pos);
         }
     }
 }
 
-void RenderMenu(void) {
+void RenderLevelMenu(void) {
     ClearScreen();
-    SDL_Rect highlight = {0, 0, 0, 0};
-    if (HEIGHT / 5 <= cursor->rect.y && cursor->rect.y <= 7 * HEIGHT / 15) {
-        if (WIDTH / 5 <= cursor->rect.x && cursor->rect.x <= 2 * WIDTH / 5) {
-            highlight.x = WIDTH / 5 - 3;
-            highlight.y = HEIGHT / 5 - 3;
-            highlight.w = WIDTH / 5 + 6;
-            highlight.h = HEIGHT / 5 + 6;
-        }
-        else if (3 * WIDTH / 5 <= cursor->rect.x && cursor->rect.x <= 4 * WIDTH / 5) {
-            highlight.x = 3 * WIDTH / 5 - 3;
-            highlight.y = HEIGHT / 5 - 3;
-            highlight.w = WIDTH / 5 + 6;
-            highlight.h = HEIGHT / 5 + 6;
-        }
+    const SDL_Point cursor_pos = { cursor->rect.x, cursor->rect.y };
+    const SDL_Rect *highlight = GetHighlightRect(cursor_pos);
+    if (highlight) {
+        SDL_Rect hl = *highlight;
+        hl.x -= 3;
+        hl.y -= 3;
+        hl.w += 6;
+        hl.h += 6;
+        DrawRect(hl, 255, 255, 255, 255);
     }
-    else if (3 * HEIGHT / 5 <= cursor->rect.y && cursor->rect.y <= 13 * HEIGHT / 15) {
-        if (WIDTH / 5 <= cursor->rect.x && cursor->rect.x <= 2 * WIDTH / 5) {
-            highlight.x = WIDTH / 5 - 3;
-            highlight.y = 3 * HEIGHT / 5 - 3;
-            highlight.w = WIDTH / 5 + 6;
-            highlight.h = HEIGHT / 5 + 6;
-        }
-        else if (3 * WIDTH / 5 <= cursor->rect.x && cursor->rect.x <= 4 * WIDTH / 5) {
-            highlight.x = 3 * WIDTH / 5 - 3;
-            highlight.y = 3 * HEIGHT / 5 - 3;
-            highlight.w = WIDTH / 5 + 6;
-            highlight.h = HEIGHT / 5 + 6;
-        }
-    }
-    DrawRect(highlight, 255, 255, 255, 255);
-    DrawTexture(res.level1, box1);
-    DrawTexture(res.level2, box2);
-    DrawTexture(res.level3, box3);
-    DrawTexture(res.level4, box4);
+    DrawTexture(res.level1_background, level1_container);
+    DrawTexture(res.level2_background, level2_container);
+    DrawTexture(res.level3_background, level3_container);
+    DrawTexture(res.level4_background, level4_container);
     RefreshScreen();
 }
 
-int MenuShouldTransition(void) {
-    return background != NULL;
+int LevelMenuShouldTransition(void) {
+    return current_background != NULL;
 }
 
-void UpdateDifficulty(void) {
+void UpdateDifficultyMenu(void) {
     SDL_Event event;
-    while (SDL_PollEvent(&event)){
-        if (event.type == SDL_QUIT){
-            running = SDL_FALSE;
-            break;
-        }
-        if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
-            running = SDL_FALSE;
-        if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT){
-            if (2 * WIDTH / 5 <= cursor->rect.x && cursor->rect.x <= 3 * WIDTH / 5){
-                if (HEIGHT / 6 <= cursor->rect.y && cursor->rect.y <= HEIGHT / 6 + HEIGHT / 9) {
-                    InitEntity(drone, 128, 128, DRONE, 5, 2.5, 0.75, 4, 200, 1000, 60, 100);
-                    InitEntity(drone_sb, 128, 128, DRONE_SUICIDE_BOMBER, 15, 0, 1, 6, 0, 0, 0, 100);
-                    InitEntity(drone_nova, 141, 141, DRONE_NOVA, 25, 5, 0.75, 2, 100, 1000, 50, 100);
-                    InitEntity(drone_hunter, 128, 128, DRONE_HUNTER, 50, 5, 1, 5, 125, 1250, 100, 100);
-                    summon_delay_max = TimeToFrames(6);
-                    difficulty = 1;
-                } else if (2 * HEIGHT / 6 <= cursor->rect.y && cursor->rect.y <= 2 * HEIGHT / 6 + HEIGHT / 9) {
-                    InitEntity(drone, 128, 128, DRONE, 10, 5, 1, 5, 160, 800, 80, 100);
-                    InitEntity(drone_sb, 128, 128, DRONE_SUICIDE_BOMBER, 20, 0, 1.5, 7, 0, 0, 0, 95);
-                    InitEntity(drone_nova, 141, 141, DRONE_NOVA, 30, 10, 1, 2.5, 80, 800, 75, 100);
-                    InitEntity(drone_hunter, 128, 128, DRONE_HUNTER, 55, 10, 1.25, 6.25, 100, 1000, 100, 100);
-                    summon_delay_max = TimeToFrames(5);
-                    difficulty = 2;
-                } else if (3 * HEIGHT / 6 <= cursor->rect.y && cursor->rect.y <= 3 * HEIGHT / 6 + HEIGHT / 9) {
-                    InitEntity(drone, 128, 128, DRONE, 15, 10, 1.25, 6, 120, 600, 90, 100);
-                    InitEntity(drone_sb, 128, 128, DRONE_SUICIDE_BOMBER, 25, 0, 2, 9, 0, 0, 0, 90);
-                    InitEntity(drone_nova, 141, 141, DRONE_NOVA, 35, 15, 1.25, 3, 60, 600, 80, 100);
-                    InitEntity(drone_hunter, 128, 128, DRONE_HUNTER, 65, 20, 1.5, 7.5, 75, 750, 100, 100);
-                    summon_delay_max = TimeToFrames(4);
-                    difficulty = 3;
-                } else if (4 * HEIGHT / 6 <= cursor->rect.y && cursor->rect.y <= 4 * HEIGHT / 6 + HEIGHT / 9) {
-                    InitEntity(drone, 128, 128, DRONE, 20, 15, 1.5, 7, 80, 400, 95, 100);
-                    InitEntity(drone_sb, 128, 128, DRONE_SUICIDE_BOMBER, 30, 0, 2.5, 11, 0, 0, 0, 75);
-                    InitEntity(drone_nova, 141, 141, DRONE_NOVA, 40, 20, 1.5, 3.5, 40, 400, 85, 100);
-                    InitEntity(drone_hunter, 128, 128, DRONE_HUNTER, 80, 30, 1.75, 8.75, 50, 500, 100, 100);
-                    summon_delay_max = TimeToFrames(3);
-                    difficulty = 4;
-                } else if (5 * HEIGHT / 6 <= cursor->rect.y && cursor->rect.y <= 5 * HEIGHT / 6 + HEIGHT / 9) {
-                    InitEntity(drone, 128, 128, DRONE, 25, 20, 1.75, 8, 40, 200, 100, 100);
-                    InitEntity(drone_sb, 128, 128, DRONE_SUICIDE_BOMBER, 40, 0, 3, 14, 0, 0, 0, 50);
-                    InitEntity(drone_nova, 141, 141, DRONE_NOVA, 50, 25, 1.75, 4, 20, 200, 90, 100);
-                    InitEntity(drone_hunter, 128, 128, DRONE_HUNTER, 100, 40, 2, 10, 25, 250, 100, 100);
-                    summon_delay_max = TimeToFrames(2);
-                    difficulty = 5;
-                }
-            }
+    while (SDL_PollEvent(&event)) {
+        if (event.type == SDL_QUIT ||
+           (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)) {
+            game_running = SDL_FALSE;
+            return;
+           }
+        if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+            SDL_Point cursor_pos = { cursor->rect.x, cursor->rect.y };
+            HandleDifficultySelection(&cursor_pos);
         }
     }
 }
 
-void RenderDifficulty(void) {
+void RenderDifficultyMenu(void) {
     ClearScreen();
-    DrawBackground(background);
-    DrawButton(button1, 1, cursor->rect.x, cursor->rect.y, 6);
-    DrawButton(button2, 1, cursor->rect.x, cursor->rect.y, 5);
-    DrawButton(button3, 1, cursor->rect.x, cursor->rect.y, 1);
-    DrawButton(button4, 1, cursor->rect.x, cursor->rect.y, 3);
-    DrawButton(button5, 1, cursor->rect.x, cursor->rect.y, 2);
+    DrawBackground(current_background);
+    DrawButton(easy_button, 1, cursor->rect.x, cursor->rect.y, 6);
+    DrawButton(medium_button, 1, cursor->rect.x, cursor->rect.y, 5);
+    DrawButton(hard_button, 1, cursor->rect.x, cursor->rect.y, 1);
+    DrawButton(harder_button, 1, cursor->rect.x, cursor->rect.y, 3);
+    DrawButton(insane_button, 1, cursor->rect.x, cursor->rect.y, 2);
     RefreshScreen();
 }
 
-int DifficultyShouldTransition(void) {
-    return difficulty != 0;
+int DifficultyMenuShouldTransition(void) {
+    return game_difficulty != 0;
 }
 
 // --------------------------------------------------------
@@ -322,7 +235,7 @@ int DifficultyShouldTransition(void) {
 // --------------------------------------------------------
 void InitGame(void) {
     drone_hunter->aim_delay = TimeToFrames(1);
-    SummonEntity(player, 0, (float)WIDTH / 2, (float)HEIGHT / 2);
+    SummonEntity(player, 0, (float)(WIDTH / 2. - ScaleWidth(64)), (float)(HEIGHT / 2. - ScaleHeight(64)));
     player->speed = 8;
     PlayMusic(current_music, -1);
     SDL_ShowCursor(SDL_DISABLE);
@@ -331,218 +244,25 @@ void InitGame(void) {
 void UpdateGame(void) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_QUIT) { running = SDL_FALSE; return; }
-        if (event.type == SDL_KEYDOWN) {
-            if (event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
-                running = SDL_FALSE;
-            else if (event.key.keysym.scancode == SDL_SCANCODE_TAB)
-                debug = !debug;
-            else if (event.key.keysym.scancode == SDL_SCANCODE_PAUSE) {
-                if (!key_pause) {
-                    DrawRect(SCREEN, 0, 0, 0, 128);
-                    DrawText(pause_title, 1);
-                    RefreshScreen();
-                }
-                key_pause = !key_pause;
-                SDL_ShowCursor(key_pause);
-            }
-            else {
-                switch (event.key.keysym.sym) {
-                    case SDLK_z: case SDLK_UP: key_up = SDL_TRUE; break;
-                    case SDLK_s: case SDLK_DOWN: key_down = SDL_TRUE; break;
-                    case SDLK_q: case SDLK_LEFT: key_left = SDL_TRUE; break;
-                    case SDLK_d: case SDLK_RIGHT: key_right = SDL_TRUE; break;
-                    default: break;
-                }
-            }
-        }
-        if (event.type == SDL_KEYUP) {
-            switch (event.key.keysym.sym) {
-                case SDLK_z: case SDLK_UP: key_up = SDL_FALSE; break;
-                case SDLK_s: case SDLK_DOWN: key_down = SDL_FALSE; break;
-                case SDLK_q: case SDLK_LEFT: key_left = SDL_FALSE; break;
-                case SDLK_d: case SDLK_RIGHT: key_right = SDL_FALSE; break;
-                default: break;
-            }
-        }
-        if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
-            key_mouse = SDL_TRUE;
-        if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT)
-            key_mouse = SDL_FALSE;
+        HandleKeyboardEvent(&event);
     }
 
     if (!key_pause) {
-        if (key_left == key_right)
-            player->velocity_x = 0;
-        else if (key_left)
-            player->velocity_x = SetVelocityX(-1);
-        else if (key_right)
-            player->velocity_x = SetVelocityX(1);
-
-        if (key_up == key_down)
-            player->velocity_y = 0;
-        else if (key_up)
-            player->velocity_y = SetVelocityY(-1);
-        else if (key_down)
-            player->velocity_y = SetVelocityY(1);
-
-        if (key_mouse)
-            EntityShoot(player, player->projectiles, plasma, (float)cursor->rect.x, (float)cursor->rect.y, 0, 0);
-
-        // Génération des ennemis
-        summon_delay--;
-        if (!summon_delay) {
-            summon_delay = randint(summon_delay_max / 5, summon_delay_max);
-            summon_delay_max--;
-            Entity *summoned = CreateEntity();
-            const int rand_category = randint(0, 49);
-            int lifetime;
-            if (easter_egg || rand_category < 15) {
-                CloneEntity(summoned, drone_sb);
-                lifetime = -1;
-            } else if (rand_category < 20) {
-                CloneEntity(summoned, drone_nova);
-                lifetime = TimeToFrames(15);
-            } else if (rand_category == 20) {
-                CloneEntity(summoned, drone_hunter);
-                lifetime = -1;
-            } else {
-                CloneEntity(summoned, drone);
-                lifetime = TimeToFrames(10);
-            }
-            const int rand_prestige = randint(0, 10000);
-            if (rand_prestige < 100) {
-                summoned->prestige = 1;
-                AssignTexturePackToEntity(summoned, res.silver_drone_frames);
-            } else if (rand_prestige == 100) {
-                summoned->prestige = 2;
-                AssignTexturePackToEntity(summoned, res.gold_drone_frames);
-            }
-            const int rand_side = randint(0, 1);
-            if (!rand_side) {
-                SummonEntity(summoned, lifetime, -drone->hitbox.w, (float)randint(0, HEIGHT - (int)drone->hitbox.h));
-                summoned->velocity_x = SetVelocityX(1);
-            } else {
-                SummonEntity(summoned, lifetime, (float)WIDTH + drone->hitbox.w, (float)randint(0, HEIGHT - (int)drone->hitbox.h));
-                summoned->velocity_x = SetVelocityX(-1);
-            }
-            AddEntity(ennemies, summoned);
-        }
-
-        EntityNode *node = ennemies->head;
-        while (node) {
-            EntityNode *next_entity = node->next;
-            if (IsEntityAIEnabled(node->entity)) {
-                if (IsEntityAlive(node->entity)) {
-                    UpdateEntityState(node->entity);
-                    switch (node->entity->type) {
-                        case DRONE:
-                            EntityShoot(node->entity, drone->projectiles, regular_bullet,
-                                player->hitbox.x, player->hitbox.y, player->hitbox.w, player->hitbox.h);
-                            MoveEntity(node->entity, 1);
-                            break;
-                        case DRONE_SUICIDE_BOMBER:
-                            EntityIntercept(node->entity, player->hitbox.x, player->hitbox.y,
-                                player->hitbox.w, player->hitbox.h);
-                            MoveEntity(node->entity, 1);
-                            break;
-                        case DRONE_NOVA:
-                            EntityShoot(node->entity, drone->projectiles, nova,
-                                player->hitbox.x, player->hitbox.y, player->hitbox.w, player->hitbox.h);
-                            MoveEntity(node->entity, 1);
-                            break;
-                        case DRONE_HUNTER:
-                            if (AreEntitiesNear(node->entity, player, HEIGHT - scale_height(128))) {
-                                EntityAim(node->entity, player->hitbox.x, player->hitbox.y,
-                                    player->hitbox.w, player->hitbox.h);
-                                EntityShoot(node->entity, drone->projectiles, sniper_bullet,
-                                    player->hitbox.x, player->hitbox.y, player->hitbox.w, player->hitbox.h);
-                            } else {
-                                EntityCease(node->entity);
-                                EntityIntercept(node->entity, player->hitbox.x, player->hitbox.y,
-                                    player->hitbox.w, player->hitbox.h);
-                                MoveEntity(node->entity, 1);
-                            }
-                            break;
-                        default:
-                            MoveEntity(node->entity, 1);
-                    }
-                } else {
-                    MoveEntity(node->entity, 1);
-                    UpdateEntityState(node->entity);
-                    node->entity->speed *= 1.005;
-                }
-            } else {
-                RemoveEntity(ennemies, node->entity);
-            }
-            node = next_entity;
-        }
-
-        node = drone->projectiles->head;
-        while (node) {
-            EntityNode *next_projectile = node->next;
-            if (IsEntityAIEnabled(node->entity)) {
-                MoveEntity(node->entity, 1);
-                UpdateEntityState(node->entity);
-            } else {
-                RemoveEntity(drone->projectiles, node->entity);
-            }
-            node = next_projectile;
-        }
-
+        UpdatePlayer();
+        HandleSummonLogic();
+        UpdateEntities();
+        UpdateProjectiles(drone->projectiles);
         MoveEntity(player, 0);
         UpdateEntityState(player);
-
-        node = player->projectiles->head;
-        while (node) {
-            EntityNode *next_projectile = node->next;
-            if (IsEntityAIEnabled(node->entity)) {
-                MoveEntity(node->entity, 1);
-                UpdateEntityState(node->entity);
-            } else {
-                RemoveEntity(player->projectiles, node->entity);
-            }
-            node = next_projectile;
-        }
-
-        node = ennemies->head;
-        while (node) {
-            EntityNode *next_entity = node->next;
-            if (IsEntityAlive(node->entity)) {
-                HandleCollision(&node->entity, &player);
-                EntityNode *proj = player->projectiles->head;
-                while (proj) {
-                    EntityNode *next_projectile = proj->next;
-                    HandleCollision(&node->entity, &proj->entity);
-                    if (IsEntityDead(proj->entity))
-                        DisableEntityAI(proj->entity);
-                    proj = next_projectile;
-                }
-                if (IsEntityDead(node->entity)) {
-                    node->entity->AI_lifetime = TimeToFrames(5);
-                    node->entity->velocity_y = SetVelocityY(1);
-                    node->entity->speed = 5;
-                    GainScore(node->entity, difficulty);
-                }
-            }
-            node = next_entity;
-        }
-
-        node = drone->projectiles->head;
-        while (node) {
-            EntityNode *next_projectile = node->next;
-            HandleCollision(&node->entity, &player);
-            if (IsEntityDead(node->entity))
-                DisableEntityAI(node->entity);
-            node = next_projectile;
-        }
+        UpdateProjectiles(player->projectiles);
+        CheckCollisions();
     }
 }
 
 void RenderGame(void) {
     if (!key_pause) {
         ClearScreen();
-        DrawBackground(background);
+        DrawBackground(current_background);
         IterateEntities(drone->projectiles, DisplayEntity);
         IterateEntities(player->projectiles, DisplayEntity);
         IterateEntities(ennemies, DisplayEntityLaserBeam);
@@ -563,7 +283,7 @@ int GameShouldTransition(void) {
 // Etat CINEMATIC
 // --------------------------------------------------------
 void InitCinematic(void) {
-    EnableEntityAI(player, TimeToFrames(4));
+    EnableEntityAI(player, TimeToFrames(3));
     player->velocity_y = SetVelocityY(1);
     player->speed = 5;
     player->effect = 0;
@@ -573,11 +293,11 @@ void UpdateCinematic(void) {
     SDL_Event event;
     while (SDL_PollEvent(&event)){
         if (event.type == SDL_QUIT){
-            running = SDL_FALSE;
+            game_running = SDL_FALSE;
             break;
         }
         if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
-            running = SDL_FALSE;
+            game_running = SDL_FALSE;
     }
     const EntityNode *node = ennemies->head;
     while (node) {
@@ -587,16 +307,17 @@ void UpdateCinematic(void) {
             MoveEntity(node->entity, 1);
         node = next_entity;
     }
-    DecreaseVolumeMusic(1);
+    player->speed *= 1.005;
     MoveEntity(player, 1);
+    DecreaseVolumeMusic(1);
     UpdateEntityState(player);
 }
 
 void RenderCinematic(void) {
     ClearScreen();
-    DrawBackground(background);
+    DrawBackground(current_background);
     IterateEntities(ennemies, DisplayEntity);
-    DrawRect(SCREEN, 0, 0, 0, 255 - player->AI_lifetime);
+    DrawRect(SCREEN, 0, 0, 0, 255 - (int)((double) player->AI_lifetime / TimeToFrames(3) * 255));
     DisplayEntity(player);
     RefreshScreen();
 }
@@ -609,52 +330,55 @@ int CinematicShouldTransition(void) {
 // Etat GAME OVER
 // --------------------------------------------------------
 void InitGameOver(void) {
+    ClearEntityList(player->projectiles);
+    ClearEntityList(drone->projectiles);
     SDL_ShowCursor(SDL_ENABLE);
     Mix_HaltMusic();
     SDL_StartTextInput();
     text_input = SDL_TRUE;
     char score_str[16];
-    sprintf(score_str, "SCORE: %d", score);
-    score_title = CreateSolidText(rect(0, 4 * HEIGHT / 10, 1, 1, 0), VOID, score_str, font_large, WHITE);
-    centered_abs(&score_title->rect);
+    sprintf(score_str, "SCORE: %d", player_score);
+    score_title = CreateSolidText(Rect(0,  3 * HEIGHT / 10, 1, 1, 0), VOID, score_str, font_large, WHITE);
+    CenteredAbs(&score_title->rect);
 }
 
 void UpdateGameOver(void) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_QUIT) { running = SDL_FALSE; break; }
+        if (event.type == SDL_QUIT) { game_running = SDL_FALSE; break; }
         if (event.type == SDL_KEYDOWN) {
             if (event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
-                running = SDL_FALSE;
+                game_running = SDL_FALSE;
             if (text_input) {
                 if (event.key.keysym.sym == SDLK_RETURN) {
                     text_input = SDL_FALSE;
                     SDL_StopTextInput();
-                    if (strlen(player_name)) {
-                        player_name_title->texture = LoadTextureFromText(player_name, font_large, GREEN);
-                        RegisterScore(player_name, difficulty);
+                    if (player_info.length) {
+                        player_info.title->texture = LoadTextureFromText(player_info.name, font_large, GREEN);
+                        RegisterScore(player_info.name, game_difficulty);
                     } else {
-                        player_name_title->texture = LoadTextureFromText("GUEST", font_large, GREEN);
-                        RegisterScore("guest", difficulty);
+                        player_info.title->texture = LoadTextureFromText("GUEST", font_large, GREEN);
+                        RegisterScore("guest", game_difficulty);
                     }
                 }
-                if (event.key.keysym.sym == SDLK_BACKSPACE && strlen(player_name) > 0) {
-                    player_name[strlen(player_name) - 1] = '\0';
-                    if (strlen(player_name) == 0)
-                        player_name_title->texture = LoadTextureFromText("ENTER YOUR NAME", font_large, WHITE);
+                if (event.key.keysym.sym == SDLK_BACKSPACE && player_info.length) {
+                    player_info.name[--player_info.length] = '\0';
+                    if (player_info.length == 0)
+                        player_info.title->texture = LoadTextureFromText("ENTER YOUR NAME", font_large, WHITE);
                     else
-                        player_name_title->texture = LoadTextureFromText(player_name, font_large, WHITE);
+                        player_info.title->texture = LoadTextureFromText(player_info.name, font_large, WHITE);
                 }
             }
         }
         if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
             if (2 * WIDTH / 5 <= cursor->rect.x && cursor->rect.x <= 3 * WIDTH / 5 &&
                 2 * HEIGHT / 3 <= cursor->rect.y && cursor->rect.y <= 2 * HEIGHT / 3 + HEIGHT / 9)
-                restart = 1;
+                game_restart = 1;
         }
-        if (text_input && event.type == SDL_TEXTINPUT && strlen(player_name) < 8) {
-            strcat(player_name, event.text.text);
-            player_name_title->texture = LoadTextureFromText(player_name, font_large, WHITE);
+        if (text_input && event.type == SDL_TEXTINPUT && player_info.length < 8) {
+            strcat(player_info.name, event.text.text);
+            player_info.length++;
+            player_info.title->texture = LoadTextureFromText(player_info.name, font_large, WHITE);
         }
     }
 }
@@ -663,13 +387,13 @@ void RenderGameOver(void) {
     ClearScreen();
     DrawText(game_over_title, 1);
     DrawText(score_title, 1);
-    DrawText(player_name_title, 1);
+    DrawText(player_info.title, 1);
     DrawButton(restart_button, 1, cursor->rect.x, cursor->rect.y, 7);
     RefreshScreen();
 }
 
 int GameOverShouldTransition(void) {
-    return restart;
+    return game_restart;
 }
 
 // --------------------------------------------------------
@@ -683,8 +407,8 @@ typedef struct {
 } GameStateFunctions;
 
 GameStateFunctions state_funcs[] = {
-    [STATE_MENU]       = { InitMenu,      UpdateMenu,      RenderMenu,      MenuShouldTransition },
-    [STATE_DIFFICULTY] = { NULL,          UpdateDifficulty, RenderDifficulty, DifficultyShouldTransition },
+    [STATE_MENU]       = { InitLevelMenu,      UpdateLevelMenu,      RenderLevelMenu,      LevelMenuShouldTransition },
+    [STATE_DIFFICULTY] = { NULL,          UpdateDifficultyMenu, RenderDifficultyMenu, DifficultyMenuShouldTransition },
     [STATE_GAME]       = { InitGame,      UpdateGame,      RenderGame,      GameShouldTransition },
     [STATE_CINEMATIC]  = { InitCinematic, UpdateCinematic, RenderCinematic, CinematicShouldTransition },
     [STATE_GAMEOVER]   = { InitGameOver,  UpdateGameOver,  RenderGameOver,  GameOverShouldTransition }
@@ -711,46 +435,49 @@ int main(int argc, char *argv[])
     font_jumbo  = 200;
 
     // Définition des zones pour les boutons
-    box1 = rect(WIDTH / 5, HEIGHT / 5, WIDTH / 5, HEIGHT / 5, 0);
-    box2 = rect(3 * WIDTH / 5, HEIGHT / 5, WIDTH / 5, HEIGHT / 5, 0);
-    box3 = rect(WIDTH / 5, 3 * HEIGHT / 5, WIDTH / 5, HEIGHT / 5, 0);
-    box4 = rect(3 * WIDTH / 5, 3 * HEIGHT / 5, WIDTH / 5, HEIGHT / 5, 0);
+    level1_container = Rect(WIDTH / 5, HEIGHT / 5, WIDTH / 5, HEIGHT / 5, 0);
+    level2_container = Rect(3 * WIDTH / 5, HEIGHT / 5, WIDTH / 5, HEIGHT / 5, 0);
+    level3_container = Rect(WIDTH / 5, 3 * HEIGHT / 5, WIDTH / 5, HEIGHT / 5, 0);
+    level4_container = Rect(3 * WIDTH / 5, 3 * HEIGHT / 5, WIDTH / 5, HEIGHT / 5, 0);
 
-    LoadAllResources(&res);
+    LoadResourcePack(&res);
+
+    SetLevelMenu();
+    SetDifficultyMenu();
 
     // Chargement des glyphes et initialisation du HUD
     CreateGlyphs();
     InitHUD();
 
     // Création des éléments de l'interface utilisateur
-    cursor         = CreateSolid(rect(0, 0, 32, 32, 1), VOID, "crosshair.png");
-    button1        = CreateSolidText(rect(0, HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0),
-                                      color(0,0,200,255), "EASY", font_large, WHITE);
-    button2        = CreateSolidText(rect(0, 2 * HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0),
-                                      color(0,200,0,255), "MEDIUM", font_large, WHITE);
-    button3        = CreateSolidText(rect(0, 3 * HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0),
-                                      color(200,200,0,255), "HARD", font_large, WHITE);
-    button4        = CreateSolidText(rect(0, 4 * HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0),
-                                      color(200,0,0,255), "HARDER", font_large, WHITE);
-    button5        = CreateSolidText(rect(0, 5 * HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0),
-                                      color(200,0,200,255), "INSANE", font_large, WHITE);
-    restart_button = CreateSolidText(rect(0, 2 * HEIGHT / 3, WIDTH / 5, HEIGHT / 9, 0),
-                                      color(100,100,100,255), "RESTART", 45, WHITE);
-    game_over_title= CreateSolidText(rect(0, HEIGHT / 4, 1, 1, 0), VOID, "GAME OVER", font_xxl, WHITE);
-    pause_title    = CreateSolidText(rect(0, 0, 1, 1, 0), VOID, "PAUSE", font_xxl, WHITE);
-    player_name_title = CreateSolidText(rect(0, 11 * HEIGHT / 20, 1, 1, 0),
+    cursor         = CreateSolid(Rect(0, 0, 32, 32, 1), VOID, "crosshair.png");
+    easy_button        = CreateSolidText(Rect(0, HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0),
+                                      Color(0,0,200,255), "EASY", font_large, WHITE);
+    medium_button        = CreateSolidText(Rect(0, 2 * HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0),
+                                      Color(0,200,0,255), "MEDIUM", font_large, WHITE);
+    hard_button        = CreateSolidText(Rect(0, 3 * HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0),
+                                      Color(200,200,0,255), "HARD", font_large, WHITE);
+    harder_button        = CreateSolidText(Rect(0, 4 * HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0),
+                                      Color(200,0,0,255), "HARDER", font_large, WHITE);
+    insane_button        = CreateSolidText(Rect(0, 5 * HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0),
+                                      Color(200,0,200,255), "INSANE", font_large, WHITE);
+    restart_button = CreateSolidText(Rect(0, 3 * HEIGHT / 4, WIDTH / 5, HEIGHT / 9, 0),
+                                      Color(100,100,100,255), "RESTART", 45, WHITE);
+    game_over_title= CreateSolidText(Rect(0, 3 * HEIGHT / 20, 1, 1, 0), VOID, "GAME OVER", font_xxl, WHITE);
+    pause_title    = CreateSolidText(Rect(0, 0, 1, 1, 0), VOID, "PAUSE", font_xxl, WHITE);
+    player_info.title = CreateSolidText(Rect(0, 11 * HEIGHT / 20, 1, 1, 0),
                                       VOID, "ENTER YOUR NAME", font_large, WHITE);
     score_title    = NULL; // Créé lors de l'initialisation de l'état Game Over
 
-    centered_abs(&button1->rect);
-    centered_abs(&button2->rect);
-    centered_abs(&button3->rect);
-    centered_abs(&button4->rect);
-    centered_abs(&button5->rect);
-    centered_abs(&restart_button->rect);
-    centered_abs(&game_over_title->rect);
-    centered_coord(&pause_title->rect);
-    centered_abs(&player_name_title->rect);
+    CenteredAbs(&easy_button->rect);
+    CenteredAbs(&medium_button->rect);
+    CenteredAbs(&hard_button->rect);
+    CenteredAbs(&harder_button->rect);
+    CenteredAbs(&insane_button->rect);
+    CenteredAbs(&restart_button->rect);
+    CenteredAbs(&game_over_title->rect);
+    CenteredCoord(&pause_title->rect);
+    CenteredAbs(&player_info.title->rect);
 
     ennemies     = CreateEntityList();
     player       = CreateEntity();
@@ -760,30 +487,30 @@ int main(int argc, char *argv[])
     drone_hunter = CreateEntity();
     regular_bullet = CreateEntity();
     sniper_bullet  = CreateEntity();
-    plasma         = CreateEntity();
-    nova           = CreateEntity();
+    plasma_orb         = CreateEntity();
+    nova_orb           = CreateEntity();
 
     // Initialisation des entités
     InitEntity(player, 128, 128, 0, 100, 5, 1, 8, 10, 10, 90, 100);
     InitEntity(regular_bullet, 16, 16, 0, 1, 0, 0, 20, 0, 0, 0, 0);
     InitEntity(sniper_bullet, 16, 16, 0, 1, 0, 0, 30, 0, 0, 0, 0);
-    InitEntity(plasma, 16, 16, 0, 1, 0, 0, 20, 0, 0, 0, 0);
-    InitEntity(nova, 24, 24, 0, 1, 0, 0, 15, 0, 0, 0, 0);
-    nova->elementary = 1;
+    InitEntity(plasma_orb, 16, 16, 0, 1, 0, 0, 20, 0, 0, 0, 0);
+    InitEntity(nova_orb, 24, 24, 0, 1, 0, 0, 15, 0, 0, 0, 0);
+    nova_orb->elementary = 1;
 
     // Affecter les packs de textures et de sons aux entités en utilisant les ressources chargées
     AssignTexturePackToEntity(player, res.player_drone_frames);
-    AssignTexturePackToEntity(drone, res.black_drone_frames);
-    AssignTexturePackToEntity(drone_sb, res.black_drone_frames);
-    AssignTexturePackToEntity(drone_nova, res.black_drone_frames);
-    AssignTexturePackToEntity(drone_hunter, res.black_drone_frames);
+    AssignTexturePackToEntity(drone, res.drone_frames);
+    AssignTexturePackToEntity(drone_sb, res.drone_frames);
+    AssignTexturePackToEntity(drone_nova, res.drone_frames);
+    AssignTexturePackToEntity(drone_hunter, res.drone_frames);
     AssignTexturePackToEntity(regular_bullet, res.regular_bullet_frames);
-    AssignTexturePackToEntity(plasma, res.plasma_frames);
-    AssignTexturePackToEntity(nova, res.nova_frames);
+    AssignTexturePackToEntity(plasma_orb, res.plasma_orb_frames);
+    AssignTexturePackToEntity(nova_orb, res.nova_orb_frames);
     AssignTexturePackToEntity(sniper_bullet, res.sniper_bullet_frames);
 
     // Affecter des marques et des sons spécifiques
-    drone_sb->mark    = res.sb_mark;
+    drone_sb->mark    = res.explosive_mark;
     drone_nova->mark  = res.nova_mark;
     drone_hunter->mark = res.hunter_mark;
     AssignSoundPackToEntity(drone, res.magnum_pistol_sounds);
@@ -792,14 +519,14 @@ int main(int argc, char *argv[])
     AssignSoundPackToEntity(drone_hunter, res.sniper_rifle_sounds);
 
     game_state = STATE_MENU;
-    running = SDL_TRUE;
+    game_running = SDL_TRUE;
 
     // Boucle principale de la machine à états
-    while (running) {
+    while (game_running) {
         const GameStateFunctions *currentState = &state_funcs[game_state];
         if (currentState->init)
             currentState->init();
-        while (running && !currentState->shouldTransition()) {
+        while (game_running && !currentState->shouldTransition()) {
             UpdateCursorPosition(cursor);
             currentState->update();
             currentState->render();
@@ -820,27 +547,26 @@ int main(int argc, char *argv[])
                 game_state = STATE_GAMEOVER;
                 break;
             case STATE_GAMEOVER:
-                game_state = restart ? STATE_MENU : STATE_GAMEOVER;
+                game_state = game_restart ? STATE_MENU : STATE_GAMEOVER;
                 break;
         }
     }
 
     // Nettoyage final
-    FreeAllResources(&res);
+    FreeResourcePack(&res);
     ClearHUD();
     ClearGlyphs();
 
     DestroySolid(cursor);
-    DestroySolid(button1);
-    DestroySolid(button2);
-    DestroySolid(button3);
-    DestroySolid(button4);
-    DestroySolid(button5);
+    DestroySolid(easy_button);
+    DestroySolid(medium_button);
+    DestroySolid(hard_button);
+    DestroySolid(harder_button);
+    DestroySolid(insane_button);
     DestroySolid(restart_button);
     DestroySolid(game_over_title);
     DestroySolid(pause_title);
-    DestroySolid(score_title);
-    DestroySolid(player_name_title);
+    DestroySolid(player_info.title);
 
     DestroyEntityList(ennemies);
     DestroyEntity(player);
@@ -850,8 +576,8 @@ int main(int argc, char *argv[])
     DestroyEntity(drone_hunter);
     DestroyEntity(regular_bullet);
     DestroyEntity(sniper_bullet);
-    DestroyEntity(plasma);
-    DestroyEntity(nova);
+    DestroyEntity(plasma_orb);
+    DestroyEntity(nova_orb);
     QuitEngine();
     return 0;
 }

@@ -5,59 +5,59 @@
 #include <math.h>
 #include <sys/stat.h>
 
-int scale_width(const int w) {
+int ScaleWidth(const int w) {
     return WIDTH * w / 1920;
 }
 
-int scale_height(const int h) {
+int ScaleHeight(const int h) {
     return HEIGHT * h / 1080;
 }
 
-int scale_refresh_rate(const int r) {
+int ScaleRefreshRate(const int r) {
     return REFRESH_RATE * r / 60;
 }
 
-int lcg_rand(void) {
+int LCGRand(void) {
     seed = (1103515245 * seed + rand()) % 2147483648;
     return (int)seed;
 }
 
-int randint(const int min, const int max) {
-    return min + lcg_rand() % (max - min + 1);
+int RandInt(const int min, const int max) {
+    return min + LCGRand() % (max - min + 1);
 }
 
-double distance(const double xa, const double ya, const double xb, const double yb) {
+double Distance(const double xa, const double ya, const double xb, const double yb) {
     return sqrt((xa - xb) * (xa - xb) + (ya - yb) * (ya - yb));
 }
 
-SDL_Rect rect(const int x, const int y, const int w, const int h, const _Bool autoscale) {
+SDL_Rect Rect(const int x, const int y, const int w, const int h, const _Bool autoscale) {
     SDL_Rect R = {x, y, w, h};
     if (autoscale) {
-        R.w = scale_width(w);
-        R.h = scale_height(h);
+        R.w = ScaleWidth(w);
+        R.h = ScaleHeight(h);
     }
     return R;
 }
 
-SDL_Color color(const int r, const int g, const int b, const int a) {
+SDL_Color Color(const int r, const int g, const int b, const int a) {
     const SDL_Color C = {r, g, b, a};
     return C;
 }
 
-void centered_abs(SDL_Rect *rect) {
+void CenteredAbs(SDL_Rect *rect) {
     rect->x = WIDTH / 2 - rect->w / 2;
 }
 
-void centered_ord(SDL_Rect *rect) {
+void CenteredOrd(SDL_Rect *rect) {
     rect->y = HEIGHT / 2 - rect->h / 2;
 }
 
-void centered_coord(SDL_Rect *rect) {
+void CenteredCoord(SDL_Rect *rect) {
     rect->x = WIDTH / 2 - rect->w / 2;
     rect->y = HEIGHT / 2 - rect->h / 2;
 }
 
-int file_exists(const char *filename) {
+int FileExists(const char *filename) {
     struct stat buffer;
     return stat(filename, &buffer) == 0;
 }
@@ -77,4 +77,3 @@ double SetVelocityY(const double var) {
     // Ajuste la vélocité selon une référence de 1080 pixels.
     return var / 1080.0 * HEIGHT / REFRESH_RATE * 60.0;
 }
-

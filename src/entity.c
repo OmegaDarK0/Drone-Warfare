@@ -5,6 +5,8 @@
 #include "globals.h"
 #include "graphics.h"
 #include "utils.h"
+#include "hud.h"
+#include "resource_pack.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -56,7 +58,8 @@ void InitEntity(Entity *entity, const float width, const float height, const int
     entity->target.y = 0;
     entity->target.w = 0;
     entity->target.h = 0;
-    entity->projectiles = CreateEntityList();
+    if (!entity->projectiles)
+        entity->projectiles = CreateEntityList();
 }
 
 void CloneEntity(Entity *clone, const Entity *entity) {
@@ -113,8 +116,6 @@ void UpdateEntityState(Entity *entity) {
     }
     if (!entity->frame_delay) {
         entity->frame_delay = entity->frame_time;
-        /*if (entity->extended_frames)
-            entity->frame_delay += (int)(0.5 * entity->frame_time * entity->velocity_y);*/
         if (entity->texture_pack->animations[entity->current_animation]->reverse_frame_mode == 0 && ++entity->frame_index == entity->texture_pack->animations[entity->current_animation]->num_frames)
             entity->frame_index = 0;
         else if (entity->texture_pack->animations[entity->current_animation]->reverse_frame_mode > 0 && ++entity->frame_index == entity->texture_pack->animations[entity->current_animation]->num_frames) {
@@ -294,15 +295,15 @@ void EntityShoot(Entity *entity, EntityList *projectiles, const Entity *ammo, co
         const double xb = x + w / 2.0;
         const double yb = y + h / 2.0;
         const double alpha = atan2(yb - ya, xb - xa);
-        projectile->velocity_x = SetVelocityX(cos(alpha) * (1 + randint(-100 + entity->precision, 100 - entity->precision) / 100.0));
-        projectile->velocity_y = SetVelocityY(sin(alpha) * (1 + randint(-100 + entity->precision, 100 - entity->precision) / 100.0));
+        projectile->velocity_x = SetVelocityX(cos(alpha) * (1 + RandInt(-100 + entity->precision, 100 - entity->precision) / 100.0));
+        projectile->velocity_y = SetVelocityY(sin(alpha) * (1 + RandInt(-100 + entity->precision, 100 - entity->precision) / 100.0));
         projectile->hitbox.x = (float)(entity->hitbox.x + entity->hitbox.w / 2.0 - projectile->hitbox.w / 2.0);
         projectile->hitbox.y = (float)(entity->hitbox.y + entity->hitbox.h / 2.0 - projectile->hitbox.h / 2.0);
-        entity->shoot_delay = TimeToFrames(randint(entity->shoot_rate_min, entity->shoot_rate_max) / 60.0);
+        entity->shoot_delay = TimeToFrames(RandInt(entity->shoot_rate_min, entity->shoot_rate_max) / (double)REFRESH_RATE);
         if (entity->effect) entity->shoot_delay *= 2;
         //if (entity->category == 3) entity->aim_delay = TimeToFrames(1);
         if (entity->sounds)
-            PlaySound(entity->sounds[randint(0, entity->num_sounds - 1)]);
+            PlaySound(entity->sounds[RandInt(0, entity->num_sounds - 1)]);
         AddEntity(projectiles, projectile);
     }
 }
@@ -313,8 +314,8 @@ void EntityIntercept(Entity *entity, const float x, const float y, const float w
     const double xb = x + w / 2.0;
     const double yb = y + h / 2.0;
     const double alpha = atan2(yb - ya, xb - xa);
-    entity->velocity_x = SetVelocityX(cos(alpha) * (1 + randint(-100 + entity->stability, 100 - entity->stability) / 100.0));
-    entity->velocity_y = SetVelocityY(sin(alpha) * (1 + randint(-100 + entity->stability, 100 - entity->stability) / 100.0));
+    entity->velocity_x = SetVelocityX(cos(alpha) * (1 + RandInt(-100 + entity->stability, 100 - entity->stability) / 100.0));
+    entity->velocity_y = SetVelocityY(sin(alpha) * (1 + RandInt(-100 + entity->stability, 100 - entity->stability) / 100.0));
 }
 
 void HandleCollision(Entity **entity1, Entity **entity2) {
@@ -330,6 +331,148 @@ void HandleCollision(Entity **entity1, Entity **entity2) {
     }
 }
 
+void ProcessDroneAI(Entity *e) {
+    switch (e->type)
+    {
+    case DRONE:
+        MoveEntity(e, 1);
+        EntityShoot(e, drone->projectiles, regular_bullet,
+                    player->hitbox.x, player->hitbox.y,
+                    player->hitbox.w, player->hitbox.h);
+        break;
+    case DRONE_SUICIDE_BOMBER:
+        MoveEntity(e, 1);
+        EntityIntercept(e, player->hitbox.x, player->hitbox.y,
+                        player->hitbox.w, player->hitbox.h);
+        break;
+    case DRONE_NOVA:
+        MoveEntity(e, 1);
+        EntityShoot(e, drone->projectiles, nova_orb,
+                    player->hitbox.x, player->hitbox.y,
+                    player->hitbox.w, player->hitbox.h);
+        break;
+    case DRONE_HUNTER:
+        if (AreEntitiesNear(e, player, HEIGHT - ScaleHeight(128))) {
+            EntityAim(e, player->hitbox.x, player->hitbox.y,
+                      player->hitbox.w, player->hitbox.h);
+            EntityShoot(e, drone->projectiles, sniper_bullet,
+                        player->hitbox.x, player->hitbox.y,
+                        player->hitbox.w, player->hitbox.h);
+        } else {
+            MoveEntity(e, 1);
+            EntityCease(e);
+            EntityIntercept(e, player->hitbox.x, player->hitbox.y,
+                            player->hitbox.w, player->hitbox.h);
+        }
+        break;
+    default: break;
+    }
+}
+
+
+void UpdateEntities(void) {
+    const EntityNode *node = ennemies->head;
+    while (node) {
+        const EntityNode *next = node->next;
+        Entity *e = node->entity;
+
+        if (!IsEntityAIEnabled(e)) {
+            RemoveEntity(ennemies, e);
+        } else if (IsEntityAlive(e)) {
+            UpdateEntityState(e);
+            ProcessDroneAI(e);
+        } else {
+            MoveEntity(e, 1);
+            UpdateEntityState(e);
+            e->speed *= 1.01;
+        }
+
+        node = next;
+    }
+}
+
+void UpdateProjectiles(EntityList *projectiles) {
+    const EntityNode *node = projectiles->head;
+    while (node) {
+        const EntityNode *next = node->next;
+        if (IsEntityAIEnabled(node->entity)) {
+            MoveEntity(node->entity, 1);
+            UpdateEntityState(node->entity);
+        } else {
+            RemoveEntity(projectiles, node->entity);
+        }
+        node = next;
+    }
+}
+
+void CheckCollisions(void) {
+    EntityNode *node = ennemies->head;
+    while (node) {
+        EntityNode *next = node->next;
+        if (IsEntityAlive(node->entity)) {
+            HandleCollision(&node->entity, &player);
+            EntityNode *proj = player->projectiles->head;
+            while (proj) {
+                EntityNode *next_proj = proj->next;
+                HandleCollision(&node->entity, &proj->entity);
+                if (IsEntityDead(proj->entity))
+                    DisableEntityAI(proj->entity);
+                proj = next_proj;
+            }
+            if (IsEntityDead(node->entity)) {
+                node->entity->AI_lifetime = TimeToFrames(5);
+                node->entity->velocity_y = SetVelocityY(1);
+                node->entity->speed = 5;
+                GainScore(node->entity, game_difficulty);
+            }
+        }
+        node = next;
+    }
+
+    node = drone->projectiles->head;
+    while (node) {
+        EntityNode *next = node->next;
+        HandleCollision(&node->entity, &player);
+        if (IsEntityDead(node->entity))
+            DisableEntityAI(node->entity);
+        node = next;
+    }
+}
+
+void HandleSummonLogic(void) {
+    if (--summon_delay <= 0) {
+        summon_delay = RandInt(summon_delay_max / 5, summon_delay_max);
+        summon_delay_max--;
+
+        Entity *e = CreateEntity();
+        const int category = RandInt(0, 49);
+
+        if (easter_egg || category < 15) CloneEntity(e, drone_sb);
+        else if (category < 20) CloneEntity(e, drone_nova);
+        else if (category == 20) CloneEntity(e, drone_hunter);
+        else CloneEntity(e, drone);
+
+        int lifetime = category < 15 || category == 20 ? -1 : TimeToFrames(10);
+        if (category >= 15 && category < 20) lifetime = TimeToFrames(15);
+
+        const int prestige = RandInt(0, 10000);
+        if (prestige < 100) {
+            e->prestige = 1;
+            AssignTexturePackToEntity(e, res.silver_drone_frames);
+        } else if (prestige == 100) {
+            e->prestige = 2;
+            AssignTexturePackToEntity(e, res.gold_drone_frames);
+        }
+
+        const int side = RandInt(0, 1);
+        const float y = (float)RandInt(0, HEIGHT - (int)drone->hitbox.h);
+        const float x = side ? (float)WIDTH + drone->hitbox.w : -drone->hitbox.w;
+        SummonEntity(e, lifetime, x, y);
+        e->velocity_x = SetVelocityX(side ? -1 : 1);
+        AddEntity(ennemies, e);
+    }
+}
+
 void DisableEntityAI(Entity *entity) {
     entity->AI = 0;
 }
@@ -340,11 +483,11 @@ void EnableEntityAI(Entity *entity, const int lifetime) {
 }
 
 _Bool AreEntitiesNear(const Entity *entity1, const Entity *entity2, const double threshold) {
-    return distance(entity1->hitbox.x, entity1->hitbox.y, entity2->hitbox.x, entity2->hitbox.y) < threshold;
+    return Distance(entity1->hitbox.x, entity1->hitbox.y, entity2->hitbox.x, entity2->hitbox.y) < threshold;
 }
 
 _Bool AreEntitiesFar(const Entity *entity1, const Entity *entity2, const double threshold) {
-    return distance(entity1->hitbox.x, entity1->hitbox.y, entity2->hitbox.x, entity2->hitbox.y) > threshold;
+    return Distance(entity1->hitbox.x, entity1->hitbox.y, entity2->hitbox.x, entity2->hitbox.y) > threshold;
 }
 
 _Bool IsEntityAIEnabled(const Entity *entity) {

@@ -8,13 +8,12 @@
 #include <stdio.h>
 
 int QuitEngine(){
-    running = SDL_FALSE;
+    game_running = SDL_FALSE;
     if (renderer) SDL_DestroyRenderer(renderer);
     if (window) SDL_DestroyWindow(window);
     Mix_CloseAudio();
     Mix_Quit();
     IMG_Quit();
-    //SDL_QuitSubSystem(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER);
     SDL_Quit();
     return -1;
 }
@@ -49,7 +48,7 @@ int InitEngine() {
     WIDTH = dm.w;
     HEIGHT = dm.h;
     REFRESH_RATE = dm.refresh_rate;
-    SCREEN = rect(0, 0, WIDTH, HEIGHT, 0);
+    SCREEN = Rect(0, 0, WIDTH, HEIGHT, 0);
     
     window = SDL_CreateWindow("Drone Warfare", 0, 0, WIDTH, HEIGHT, SDL_WINDOW_FULLSCREEN);
     if (!window) {
