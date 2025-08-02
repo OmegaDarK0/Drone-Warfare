@@ -372,7 +372,7 @@ void UpdateGameOver(void) {
         }
         if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
             if (2 * WIDTH / 5 <= cursor->rect.x && cursor->rect.x <= 3 * WIDTH / 5 &&
-                2 * HEIGHT / 3 <= cursor->rect.y && cursor->rect.y <= 2 * HEIGHT / 3 + HEIGHT / 9)
+                3 * HEIGHT / 4 <= cursor->rect.y && cursor->rect.y <= 3 * HEIGHT / 4 + HEIGHT / 9)
                 game_restart = 1;
         }
         if (text_input && event.type == SDL_TEXTINPUT && player_info.length < 8) {
