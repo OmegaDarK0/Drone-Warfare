@@ -48,7 +48,7 @@ void InitEntity(Entity *entity, const float width, const float height, const int
     entity->highlight = 0;
     entity->type = category;
     entity->prestige = 0;
-    entity->frame_time = (int)(REFRESH_RATE / 20.0); // TIME = 20 (par exemple)
+    entity->frame_time = (int)(FPS / 20.0); // TIME = 20 (par exemple)
     entity->frame_delay = 0;
     entity->hitbox.x = 0;
     entity->hitbox.y = 0;
@@ -299,7 +299,7 @@ void EntityShoot(Entity *entity, EntityList *projectiles, const Entity *ammo, co
         projectile->velocity_y = SetVelocityY(sin(alpha) * (1 + RandInt(-100 + entity->precision, 100 - entity->precision) / 100.0));
         projectile->hitbox.x = (float)(entity->hitbox.x + entity->hitbox.w / 2.0 - projectile->hitbox.w / 2.0);
         projectile->hitbox.y = (float)(entity->hitbox.y + entity->hitbox.h / 2.0 - projectile->hitbox.h / 2.0);
-        entity->shoot_delay = TimeToFrames(RandInt(entity->shoot_rate_min, entity->shoot_rate_max) / (double)REFRESH_RATE);
+        entity->shoot_delay = TimeToFrames(RandInt(entity->shoot_rate_min, entity->shoot_rate_max) / 60.);
         if (entity->effect) entity->shoot_delay *= 2;
         //if (entity->category == 3) entity->aim_delay = TimeToFrames(1);
         if (entity->sounds)

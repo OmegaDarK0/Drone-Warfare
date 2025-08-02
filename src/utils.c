@@ -13,8 +13,8 @@ int ScaleHeight(const int h) {
     return HEIGHT * h / 1080;
 }
 
-int ScaleRefreshRate(const int r) {
-    return REFRESH_RATE * r / 60;
+double ScaleFPS(const double t) {
+    return 60 * t / FPS;
 }
 
 int LCGRand(void) {
@@ -63,17 +63,16 @@ int FileExists(const char *filename) {
 }
 
 int TimeToFrames(const double seconds) {
-    // Convertit le temps en secondes au nombre de frames, en se basant sur REFRESH_RATE.
-    return (int)(seconds * REFRESH_RATE);
+    // Convertit le temps en secondes au nombre de frames, en se basant sur FPS.
+    return (int)(seconds * FPS);
 }
 
 double SetVelocityX(const double var) {
     // Ajuste la vélocité selon une référence de 1920 pixels.
-    // Par exemple, si var == 1, on renvoie une vitesse proportionnelle à la largeur actuelle.
-    return var / 1920.0 * WIDTH / REFRESH_RATE * 60.0;
+    return var / 1920.0 * WIDTH * DELTA_TIME * 60;
 }
 
 double SetVelocityY(const double var) {
     // Ajuste la vélocité selon une référence de 1080 pixels.
-    return var / 1080.0 * HEIGHT / REFRESH_RATE * 60.0;
+    return var / 1080.0 * HEIGHT * DELTA_TIME * 60;
 }

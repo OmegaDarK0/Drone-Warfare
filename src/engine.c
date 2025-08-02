@@ -28,7 +28,8 @@ int InitEngine() {
         SDL_Log("IMG_Init: %s", IMG_GetError());
         return QuitEngine();
     }
-    if ((Mix_Init(MIX_INIT_MP3 | MIX_INIT_OGG | MIX_INIT_FLAC) & (MIX_INIT_MP3 | MIX_INIT_OGG | MIX_INIT_FLAC))
+    if ((Mix_Init(MIX_INIT_MP3 | MIX_INIT_OGG | MIX_INIT_FLAC)
+        & (MIX_INIT_MP3 | MIX_INIT_OGG | MIX_INIT_FLAC))
         != (MIX_INIT_MP3 | MIX_INIT_OGG | MIX_INIT_FLAC)) {
         SDL_Log("Mix_Init: %s", Mix_GetError());
         return QuitEngine();
@@ -48,6 +49,8 @@ int InitEngine() {
     WIDTH = dm.w;
     HEIGHT = dm.h;
     REFRESH_RATE = dm.refresh_rate;
+    FPS = REFRESH_RATE;
+    FRAME_DELAY = 1000 / FPS;
     SCREEN = Rect(0, 0, WIDTH, HEIGHT, 0);
     
     window = SDL_CreateWindow("Drone Warfare", 0, 0, WIDTH, HEIGHT, SDL_WINDOW_FULLSCREEN);

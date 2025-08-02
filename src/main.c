@@ -526,29 +526,57 @@ int main(int argc, char *argv[])
         const GameStateFunctions *currentState = &state_funcs[game_state];
         if (currentState->init)
             currentState->init();
+
+        Uint32 last = SDL_GetTicks(); // Temps de départ
+
         while (game_running && !currentState->shouldTransition()) {
+            //const Uint32 frame_start = SDL_GetTicks(); // Début de la frame
+
+            // --- Calcul du delta time ---
+            const Uint32 now = SDL_GetTicks();
+            DELTA_TIME = (now - last) / 1000.; // En secondes
+            last = now;
+
+            // --- Affichage delta_time et FPS ---
+            /*const double fps = DELTA_TIME > 0.0 ? 1.0 / DELTA_TIME : 0.0;
+            printf("delta_time = %.4f s | FPS = %.1f\n", DELTA_TIME, fps);*/
+
+            // --- Logique du jeu ---
             UpdateCursorPosition(cursor);
             currentState->update();
             currentState->render();
-            // Vous pouvez ajouter ici un contrôle de framerate (exemple : SDL_Delay)
+
+            // --- Limitation FPS ---
+            /*const Uint32 frame_time = SDL_GetTicks() - frame_start;
+
+            if (frame_time < FRAME_DELAY) {
+                // Dormir la majeure partie du temps restant
+                SDL_Delay(FRAME_DELAY - frame_time - 1);
+
+                // Spin-wait pour le reste du temps (plus précis)
+                while (SDL_GetTicks() - frame_start < FRAME_DELAY) {
+                    // boucle vide, attente active
+                }
+            }*/
         }
+
         // Transition entre les états
         switch(game_state) {
-            case STATE_MENU:
-                game_state = STATE_DIFFICULTY;
-                break;
-            case STATE_DIFFICULTY:
-                game_state = STATE_GAME;
-                break;
-            case STATE_GAME:
-                game_state = STATE_CINEMATIC;
-                break;
-            case STATE_CINEMATIC:
-                game_state = STATE_GAMEOVER;
-                break;
-            case STATE_GAMEOVER:
-                game_state = game_restart ? STATE_MENU : STATE_GAMEOVER;
-                break;
+        case STATE_MENU:
+            game_state = STATE_DIFFICULTY;
+            break;
+        case STATE_DIFFICULTY:
+            game_state = STATE_GAME;
+            break;
+        case STATE_GAME:
+            game_state = STATE_CINEMATIC;
+            break;
+        case STATE_CINEMATIC:
+            game_state = STATE_GAMEOVER;
+            break;
+        case STATE_GAMEOVER:
+            game_state = game_restart ? STATE_MENU : STATE_GAMEOVER;
+            break;
         }
     }
 
