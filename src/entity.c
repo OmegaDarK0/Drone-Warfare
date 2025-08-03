@@ -431,6 +431,9 @@ void HandleCollision(Entity **entity1, Entity **entity2) {
 
         e1->highlight = 0.1;
         e2->highlight = 0.1;
+
+        if (e1->elementary == 1) e2->effect = 1.5;
+        if (e2->elementary == 1) e1->effect = 1.5;
     }
 
     /*
@@ -443,9 +446,6 @@ void HandleCollision(Entity **entity1, Entity **entity2) {
         entity2->hit_cooldown = 0.2;
     }
     */
-
-    if (e1->elementary == 1) e2->effect = 1.5;
-    if (e2->elementary == 1) e1->effect = 1.5;
 }
 
 void CheckCollisions(void) {
