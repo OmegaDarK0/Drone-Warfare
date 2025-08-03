@@ -129,7 +129,7 @@ _Bool HandleDifficultySelection(const SDL_Point *pos) {
         InitEntity(drone_hunter, 128, 128, DRONE_HUNTER,
                    cfg[3].HP, cfg[3].damage, cfg[3].m_damage, cfg[3].speed,
                    cfg[3].rate_min, cfg[3].rate_max, cfg[3].precision, cfg[3].stability);
-        summon_delay_max = TimeToFrames(difficulty_menu[idx].summon_delay);
+        summon_delay_max = difficulty_menu[idx].summon_delay;
         game_difficulty = difficulty_menu[idx].difficulty;
         return 1;
     }

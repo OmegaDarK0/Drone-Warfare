@@ -148,7 +148,7 @@ void InitLevelMenu(void) {
     current_background = NULL;
     player_score = 0;
     entity_count = 0;
-    summon_delay = TimeToFrames(3);
+    summon_delay = 3;
     key_pause = SDL_FALSE;
     key_up = SDL_FALSE;
     key_down = SDL_FALSE;
@@ -234,7 +234,7 @@ int DifficultyMenuShouldTransition(void) {
 // Etat GAME
 // --------------------------------------------------------
 void InitGame(void) {
-    drone_hunter->aim_delay = TimeToFrames(1);
+    drone_hunter->aim_delay = 1;
     SummonEntity(player, 0, (float)(WIDTH / 2. - ScaleWidth(64)), (float)(HEIGHT / 2. - ScaleHeight(64)));
     player->speed = 8;
     PlayMusic(current_music, -1);
@@ -283,7 +283,7 @@ int GameShouldTransition(void) {
 // Etat CINEMATIC
 // --------------------------------------------------------
 void InitCinematic(void) {
-    EnableEntityAI(player, TimeToFrames(3));
+    EnableEntityAI(player, 3);
     player->velocity_y = SetVelocityY(1);
     player->speed = 5;
     player->effect = 0;
@@ -307,9 +307,9 @@ void UpdateCinematic(void) {
             MoveEntity(node->entity, 1);
         node = next_entity;
     }
-    player->speed *= 1.005;
+    player->speed *= pow(1.25, DELTA_TIME);
     MoveEntity(player, 1);
-    DecreaseVolumeMusic(1);
+    ChangeVolumeMusic((int)(1 + 254 * player->AI_lifetime / 3));
     UpdateEntityState(player);
 }
 
@@ -317,7 +317,7 @@ void RenderCinematic(void) {
     ClearScreen();
     DrawBackground(current_background);
     IterateEntities(ennemies, DisplayEntity);
-    DrawRect(SCREEN, 0, 0, 0, 255 - (int)((double) player->AI_lifetime / TimeToFrames(3) * 255));
+    DrawRect(SCREEN, 0, 0, 0, 255 - (int)(1 + 254 * player->AI_lifetime / 3));
     DisplayEntity(player);
     RefreshScreen();
 }
@@ -492,10 +492,10 @@ int main(int argc, char *argv[])
 
     // Initialisation des entités
     InitEntity(player, 128, 128, 0, 100, 5, 1, 8, 10, 10, 90, 100);
-    InitEntity(regular_bullet, 16, 16, 0, 1, 0, 0, 20, 0, 0, 0, 0);
-    InitEntity(sniper_bullet, 16, 16, 0, 1, 0, 0, 30, 0, 0, 0, 0);
-    InitEntity(plasma_orb, 16, 16, 0, 1, 0, 0, 20, 0, 0, 0, 0);
-    InitEntity(nova_orb, 24, 24, 0, 1, 0, 0, 15, 0, 0, 0, 0);
+    InitEntity(regular_bullet, 16, 16, 0, 0, 0, 0, 20, 0, 0, 0, 0);
+    InitEntity(sniper_bullet, 16, 16, 0, 0, 0, 0, 30, 0, 0, 0, 0);
+    InitEntity(plasma_orb, 16, 16, 0, 0, 0, 0, 20, 0, 0, 0, 0);
+    InitEntity(nova_orb, 24, 24, 0, 0, 0, 0, 15, 0, 0, 0, 0);
     nova_orb->elementary = 1;
 
     // Affecter les packs de textures et de sons aux entités en utilisant les ressources chargées
@@ -547,9 +547,9 @@ int main(int argc, char *argv[])
             currentState->render();
 
             // --- Limitation FPS ---
-            /*const Uint32 frame_time = SDL_GetTicks() - frame_start;
+            //const Uint32 frame_time = SDL_GetTicks() - frame_start;
 
-            if (frame_time < FRAME_DELAY) {
+            /*if (frame_time < FRAME_DELAY) {
                 // Dormir la majeure partie du temps restant
                 SDL_Delay(FRAME_DELAY - frame_time - 1);
 

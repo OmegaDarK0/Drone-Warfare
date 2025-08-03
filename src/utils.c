@@ -13,10 +13,6 @@ int ScaleHeight(const int h) {
     return HEIGHT * h / 1080;
 }
 
-double ScaleFPS(const double t) {
-    return 60 * t / FPS;
-}
-
 int LCGRand(void) {
     seed = (1103515245 * seed + rand()) % 2147483648;
     return (int)seed;
@@ -62,17 +58,12 @@ int FileExists(const char *filename) {
     return stat(filename, &buffer) == 0;
 }
 
-int TimeToFrames(const double seconds) {
-    // Convertit le temps en secondes au nombre de frames, en se basant sur FPS.
-    return (int)(seconds * FPS);
-}
-
 double SetVelocityX(const double var) {
     // Ajuste la vélocité selon une référence de 1920 pixels.
-    return var / 1920.0 * WIDTH * DELTA_TIME * 60;
+    return var / 1920.0 * WIDTH * 60;
 }
 
 double SetVelocityY(const double var) {
     // Ajuste la vélocité selon une référence de 1080 pixels.
-    return var / 1080.0 * HEIGHT * DELTA_TIME * 60;
+    return var / 1080.0 * HEIGHT * 60;
 }

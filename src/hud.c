@@ -30,7 +30,7 @@ void InitHUD(void) {
 }
 
 void DisplayHUD(const Entity *entity) {
-    if (!entity->effect) {
+    if (entity->effect <= 0) {
         hitpoints_rect.w = ScaleWidth((int)entity->hitpoints);
         hitpoints_max_rect.x = ScaleWidth((int)entity->hitpoints) + hitpoints_rect.x;
         hitpoints_max_rect.w = ScaleWidth((int)(entity->hitpoints_max - entity->hitpoints));
@@ -43,7 +43,7 @@ void DisplayHUD(const Entity *entity) {
 
 void DisplayEffect(const Entity *entity) {
     SDL_Rect R = Rect(0, 0, 10, 10, 1);
-    for (int i = 0; i < entity->effect * 10; i++) {
+    for (int i = 0; i < entity->effect * 1000; i++) {
         R.x = RandInt(0, WIDTH - 10);
         R.y = RandInt(0, HEIGHT - 10);
         DrawRect(R, RandInt(0,255), RandInt(0,255), RandInt(0,255), 255);
