@@ -74,8 +74,8 @@ EXTERN SDL_Rect level3_container, level4_container;
    ========================= */
 EXTERN unsigned long int seed;
 EXTERN int entity_count;
-EXTERN int summon_delay;
-EXTERN int summon_delay_max;
+EXTERN double summon_delay;
+EXTERN double summon_delay_max;
 
 #undef EXTERN
 #endif // GLOBALS_H

@@ -19,13 +19,13 @@ void EntityCease(Entity *entity);
 void EntityAim(Entity *entity, float x, float y, float w, float h);
 void EntityShoot(Entity *entity, EntityList *projectiles, const Entity *ammo, float x, float y, float w, float h);
 void EntityIntercept(Entity *entity, float x, float y, float w, float h);
-void HandleCollision(Entity **entity1, Entity **entity2);
 void DisableEntityAI(Entity *entity);
 void EnableEntityAI(Entity *entity, int lifetime);
 
 void ProcessDroneAI(Entity *e);
 void UpdateEntities(void);
 void UpdateProjectiles(EntityList *projectiles);
+void HandleCollision(Entity **entity1, Entity **entity2);
 void CheckCollisions(void);
 void HandleSummonLogic(void);
 

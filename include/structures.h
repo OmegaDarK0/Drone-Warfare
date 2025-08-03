@@ -20,6 +20,7 @@ typedef struct PlayerInfo PlayerInfo;
 typedef struct EntityConfig EntityConfig;
 typedef struct LevelMenuEntry LevelMenuEntry;
 typedef struct DifficultyMenuEntry DifficultyMenuEntry;
+typedef struct CollisionPair CollisionPair;
 
 enum GameState{
     STATE_MENU,
@@ -57,7 +58,7 @@ struct EntityList{
 struct Entity{
     // CORE
     _Bool AI;
-    int AI_lifetime;
+    double AI_lifetime;
     int ID;
     // FRONT
     double hitpoints;
@@ -69,20 +70,23 @@ struct Entity{
     double velocity_y;
     int shoot_rate_min;
     int shoot_rate_max;
-    int shoot_delay;
-    int aim_delay;
+    double shoot_delay;
+    double aim_delay;
     int precision;
     int stability;
     _Bool aiming;
     // MIDDLE
+    /*double hit_cooldown;
+    _Bool has_hit;
+    _Bool is_projectile;*/
     int elementary;
-    int effect;
-    int highlight;
+    double effect;
+    double highlight;
     int type;
     int prestige;
     // BACK
-    int frame_time;
-    int frame_delay;
+    double frame_time;
+    double frame_delay;
     int frame_index;
     int current_animation;
     //int reverse_frame_mode;
@@ -200,6 +204,11 @@ struct DifficultyMenuEntry{
     int difficulty;
     EntityConfig drone_config[4]; // DRONE, DRONE_SB, DRONE_NOVA, DRONE_HUNTER
     int summon_delay;
+};
+
+struct CollisionPair{
+    Entity *a;
+    Entity *b;
 };
 
 #endif // STRUCTURES_H
