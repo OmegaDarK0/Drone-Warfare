@@ -22,7 +22,7 @@ dynamic gameplay, without any narrative context.​
 ​
 ## 2. Features​
 * **Adjustable Difficulty Levels**: Choose from **4 game levels** and
-**5 difficulties** (Easy, Medium, Harder, Hard, Insane).​
+**5 difficulties** (Easy, Medium, Hard, Harder, Insane).​
 * **Infinite Enemy Waves**: Difficulty progressively increases with
 faster and more numerous waves as the level progresses.​
 * **Screen Resolution Adaptation**: The game is **adaptable to all
