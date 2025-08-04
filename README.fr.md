@@ -72,6 +72,7 @@ tire en cliquant.​
 ​
 ​
 ## 5. Crédits et licences
+### Contributions au projet
 * **Développement** : Le code et la majorité des graphismes ont été
 réalisés par moi-même.​
 * **Sons** : Les effets sonores sont issus de **Halo: Reach**.​
