@@ -23,7 +23,7 @@ ni contexte narratif.​
 ​
 ## 2. Fonctionnalités​
 * **Niveaux de difficulté ajustables** : Choisissez parmi **4 niveaux
-de jeu** et **5 difficultés** (Facile, Moyen, Difficile, Très Difficile
+de jeu** et **5 difficultés** (Facile, Moyen, Difficile, Très Difficile,
 Insane).​
 * **Vagues d'ennemis infinies** : La difficulté augmente
 progressivement avec des vagues de plus en plus rapides et nombreuses
