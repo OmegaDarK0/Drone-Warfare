@@ -40,9 +40,9 @@ void HandleKeyboardEvent(SDL_Event *event) {
 
     if (event->type == SDL_KEYUP) {
         switch (key) {
-        case SDLK_z: case SDLK_UP: key_up = SDL_FALSE; break;
+        case SDLK_w: case SDLK_z: case SDLK_UP: key_up = SDL_FALSE; break;
         case SDLK_s: case SDLK_DOWN: key_down = SDL_FALSE; break;
-        case SDLK_q: case SDLK_LEFT: key_left = SDL_FALSE; break;
+         case SDLK_a: case SDLK_q: case SDLK_LEFT: key_left = SDL_FALSE; break;
         case SDLK_d: case SDLK_RIGHT: key_right = SDL_FALSE; break;
         }
     }
