@@ -27,7 +27,7 @@ de jeu** et **5 difficultés** (Facile, Moyen, Difficile, Très Difficile,
 Insane).​
 * **Vagues d'ennemis infinies** : La difficulté augmente
 progressivement avec des vagues de plus en plus rapides et nombreuses
-à mesure que le niveau progresse.​* **Adaptation de la résolution d'écran** : Le jeu est **adaptable à
+à mesure que le niveau progresse.​ **Adaptation de la résolution d'écran** : Le jeu est **adaptable à
 toutes les résolutions d'écran**, bien qu'il soit **optimisé et
 préférable pour une résolution 16:9**.​
 * **Variété de drones** : Faites face à **4 types de drones** avec des
@@ -71,7 +71,7 @@ tire en cliquant.​
 * **Quitter** : Appuyez sur la touche **Échap**.​
 ​
 ​
-## 5. Crédits et licences​### Contributions au projet​
+## 5. Crédits et licences
 * **Développement** : Le code et la majorité des graphismes ont été
 réalisés par moi-même.​
 * **Sons** : Les effets sonores sont issus de **Halo: Reach**.​
