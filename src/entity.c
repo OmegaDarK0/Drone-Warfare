@@ -28,7 +28,7 @@ Entity *CreateEntity(void) {
     return entity;
 }
 
-void InitEntity(Entity *entity, const float width, const float height, const int category, const double HP, const double damage, const double m_damage, const double speed, const int rate_min, const int rate_max, const int precision, const int stability) {
+void InitEntity(Entity *entity, const float width, const float height, const int category, const double HP, const double damage, const double m_damage, const double speed, const double rate_min, const double rate_max, const int precision, const int stability) {
     entity->hitpoints = HP;
     entity->hitpoints_max = HP;
     entity->damage = damage;
@@ -316,7 +316,7 @@ void EntityShoot(Entity *entity, EntityList *projectiles, const Entity *ammo, co
         projectile->velocity_y = SetVelocityY(sin(alpha) * (1 + RandInt(-100 + entity->precision, 100 - entity->precision) / 100.0));
         projectile->hitbox.x = (float)(entity->hitbox.x + entity->hitbox.w / 2.0 - projectile->hitbox.w / 2.0);
         projectile->hitbox.y = (float)(entity->hitbox.y + entity->hitbox.h / 2.0 - projectile->hitbox.h / 2.0);
-        entity->shoot_delay += RandInt(entity->shoot_rate_min, entity->shoot_rate_max) / 60.;
+        entity->shoot_delay += RandInt((int)(entity->shoot_rate_min * 100), (int)(entity->shoot_rate_max * 100)) / 100.;
         if (entity->effect > 0) entity->shoot_delay *= 2;
         if (entity->sounds)
             PlaySound(entity->sounds[RandInt(0, entity->num_sounds - 1)]);

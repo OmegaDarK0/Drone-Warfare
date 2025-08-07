@@ -491,7 +491,7 @@ int main(int argc, char *argv[])
     nova_orb           = CreateEntity();
 
     // Initialisation des entités
-    InitEntity(player, 128, 128, 0, 100, 5, 1, 8, 10, 10, 90, 100);
+    InitEntity(player, 128, 128, 0, 100, 5, 1, 8, .15, .175, 90, 100);
     InitEntity(regular_bullet, 16, 16, 0, 0, 0, 0, 20, 0, 0, 0, 0);
     InitEntity(sniper_bullet, 16, 16, 0, 0, 0, 0, 30, 0, 0, 0, 0);
     InitEntity(plasma_orb, 16, 16, 0, 0, 0, 0, 20, 0, 0, 0, 0);
