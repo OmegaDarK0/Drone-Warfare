@@ -68,8 +68,8 @@ struct Entity{
     double speed;
     double velocity_x;
     double velocity_y;
-    int shoot_rate_min;
-    int shoot_rate_max;
+    double shoot_rate_min;
+    double shoot_rate_max;
     double shoot_delay;
     double aim_delay;
     int precision;
@@ -186,8 +186,8 @@ struct EntityConfig{
     double damage;
     double m_damage;
     double speed;
-    int rate_min;
-    int rate_max;
+    double rate_min;
+    double rate_max;
     int precision;
     int stability;
 };

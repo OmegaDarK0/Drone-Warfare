@@ -4,7 +4,7 @@
 #include "structures.h"
 
 Entity *CreateEntity(void);
-void InitEntity(Entity *entity, float width, float height, int category, double HP, double damage, double m_damage, double speed, int rate_min, int rate_max, int precision, int stability);
+void InitEntity(Entity *entity, float width, float height, int category, double HP, double damage, double m_damage, double speed, double rate_min, double rate_max, int precision, int stability);
 void CloneEntity(Entity *clone, const Entity *entity);
 void DestroyEntity(Entity *entity);
 void UpdateEntityState(Entity *entity);
