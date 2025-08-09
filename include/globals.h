@@ -53,7 +53,7 @@ EXTERN int font_jumbo;
    ========================= */
 EXTERN Entity *player;
 EXTERN Entity *drone, *drone_sb, *drone_nova, *drone_hunter;
-EXTERN Entity *regular_bullet, *sniper_bullet, *plasma_orb, *nova_orb;
+EXTERN Entity *regular_bullet, *sniper_bullet, *plasma_orb, *raw_plasma_orb, *nova_orb;
 EXTERN EntityList *ennemies;
 
 /* =========================
@@ -72,7 +72,6 @@ EXTERN SDL_Rect level3_container, level4_container;
 /* =========================
    == Autres ==
    ========================= */
-EXTERN unsigned long int seed;
 EXTERN int entity_count;
 EXTERN double summon_delay;
 EXTERN double summon_delay_max;

@@ -159,6 +159,7 @@ struct ResourcePack{
     TexturePack *regular_bullet_frames;
     TexturePack *sniper_bullet_frames;
     TexturePack *plasma_orb_frames;
+    TexturePack *raw_plasma_orb_frames;
     TexturePack *nova_orb_frames;
 
     SoundPack *magnum_pistol_sounds;

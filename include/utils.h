@@ -3,31 +3,27 @@
 
 #include <SDL2/SDL.h>
 
-int ScaleWidth(int w);
-int ScaleHeight(int h);
+int scale_width(int w);
+int scale_height(int h);
 
-int LCGRand(void);
-int RandInt(int min, int max);
+double distance(double xa, double ya, double xb, double yb);
 
-double Distance(double xa, double ya, double xb, double yb);
+SDL_Rect rect(int x, int y, int w, int h, _Bool autoscale);
+SDL_Color color(int r, int g, int b, int a);
 
-SDL_Rect Rect(int x, int y, int w, int h, _Bool autoscale);
-SDL_Color Color(int r, int g, int b, int a);
+void centered_abs(SDL_Rect *rect);
+void centered_ord(SDL_Rect *rect);
+void centered_coord(SDL_Rect *rect);
 
-void CenteredAbs(SDL_Rect *rect);
-void CenteredOrd(SDL_Rect *rect);
-void CenteredCoord(SDL_Rect *rect);
-
-int FileExists(const char *filename);
+int file_exists(const char *filename);
 
 // Ajuste une vélocité donnée (en référence à 1920 pixels de largeur)
 // Cette fonction renvoie une vitesse ajustée selon la largeur actuelle de l'écran,
-// le taux de rafraîchissement et une base de 60 fps.
-double SetVelocityX(double var);
+double set_velocity_x(double var);
 
 // Ajuste une vélocité donnée (en référence à 1080 pixels de hauteur)
 // Similaire à SetVelocityX, mais adapté à la hauteur de l'écran.
-double SetVelocityY(double var);
+double set_velocity_y(double var);
 
 #endif // UTILS_H
 
