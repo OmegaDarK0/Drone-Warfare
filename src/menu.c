@@ -11,23 +11,23 @@ LevelMenuEntry level_menu[LEVEL_MENU_COUNT];
 DifficultyMenuEntry difficulty_menu[DIFFICULTY_MENU_COUNT];
 
 void SetLevelMenu(void){
-    level_menu[0].area = Rect(0, 0, 0, 0, 0);
+    level_menu[0].area = rect(0, 0, 0, 0, 0);
     level_menu[0].music = res.level0_music;
     level_menu[0].background = res.level0_background;
     level_menu[0].level_id = 0;
-    level_menu[1].area = Rect(WIDTH / 5, HEIGHT / 5, WIDTH / 5, 3 * HEIGHT / 15, 0);
+    level_menu[1].area = rect(WIDTH / 5, HEIGHT / 5, WIDTH / 5, 3 * HEIGHT / 15, 0);
     level_menu[1].music = res.level1_music;
     level_menu[1].background = res.level1_background;
     level_menu[1].level_id = 1;
-    level_menu[2].area = Rect(3 * WIDTH / 5, HEIGHT / 5, WIDTH / 5, 3 * HEIGHT / 15, 0);
+    level_menu[2].area = rect(3 * WIDTH / 5, HEIGHT / 5, WIDTH / 5, 3 * HEIGHT / 15, 0);
     level_menu[2].music = res.level2_music;
     level_menu[2].background = res.level2_background;
     level_menu[2].level_id = 2;
-    level_menu[3].area = Rect(WIDTH / 5, 3 * HEIGHT / 5, WIDTH / 5, 3 * HEIGHT / 15, 0);
+    level_menu[3].area = rect(WIDTH / 5, 3 * HEIGHT / 5, WIDTH / 5, 3 * HEIGHT / 15, 0);
     level_menu[3].music = res.level3_music;
     level_menu[3].background = res.level3_background;
     level_menu[3].level_id = 3;
-    level_menu[4].area = Rect(3 * WIDTH / 5, 3 * HEIGHT / 5, WIDTH / 5, 3 * HEIGHT / 15, 0);
+    level_menu[4].area = rect(3 * WIDTH / 5, 3 * HEIGHT / 5, WIDTH / 5, 3 * HEIGHT / 15, 0);
     level_menu[4].music = res.level4_music;
     level_menu[4].background = res.level4_background;
     level_menu[4].level_id = 4;

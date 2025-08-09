@@ -51,7 +51,7 @@ int InitEngine() {
     REFRESH_RATE = dm.refresh_rate;
     FPS = REFRESH_RATE;
     FRAME_DELAY = 1000 / FPS;
-    SCREEN = Rect(0, 0, WIDTH, HEIGHT, 0);
+    SCREEN = rect(0, 0, WIDTH, HEIGHT, 0);
     
     window = SDL_CreateWindow("Drone Warfare", 0, 0, WIDTH, HEIGHT, SDL_WINDOW_FULLSCREEN);
     if (!window) {

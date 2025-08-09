@@ -8,8 +8,8 @@
 void UpdatePlayer(void) {
     const int vx = (int)key_right - (int)key_left;
     const int vy = (int)key_down - (int)key_up;
-    player->velocity_x = SetVelocityX(vx);
-    player->velocity_y = SetVelocityY(vy);
+    player->velocity_x = set_velocity_x(vx);
+    player->velocity_y = set_velocity_y(vy);
 
     if (key_mouse) {
         EntityShoot(player, player->projectiles, plasma_orb,

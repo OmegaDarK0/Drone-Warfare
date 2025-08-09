@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "rng.h"
+
 Entity *CreateEntity(void) {
     Entity *entity = malloc(sizeof(Entity));
     //if (!entity)
@@ -312,14 +314,14 @@ void EntityShoot(Entity *entity, EntityList *projectiles, const Entity *ammo, co
         const double xb = x + w / 2.0;
         const double yb = y + h / 2.0;
         const double alpha = atan2(yb - ya, xb - xa);
-        projectile->velocity_x = SetVelocityX(cos(alpha) * (1 + RandInt(-100 + entity->precision, 100 - entity->precision) / 100.0));
-        projectile->velocity_y = SetVelocityY(sin(alpha) * (1 + RandInt(-100 + entity->precision, 100 - entity->precision) / 100.0));
+        projectile->velocity_x = set_velocity_x(cos(alpha) * (1 + randint(-100 + entity->precision, 100 - entity->precision) / 100.0));
+        projectile->velocity_y = set_velocity_y(sin(alpha) * (1 + randint(-100 + entity->precision, 100 - entity->precision) / 100.0));
         projectile->hitbox.x = (float)(entity->hitbox.x + entity->hitbox.w / 2.0 - projectile->hitbox.w / 2.0);
         projectile->hitbox.y = (float)(entity->hitbox.y + entity->hitbox.h / 2.0 - projectile->hitbox.h / 2.0);
-        entity->shoot_delay += RandInt((int)(entity->shoot_rate_min * 100), (int)(entity->shoot_rate_max * 100)) / 100.;
+        entity->shoot_delay += randdouble(entity->shoot_rate_min, entity->shoot_rate_max); // randdouble
         if (entity->effect > 0) entity->shoot_delay *= 2;
         if (entity->sounds)
-            PlaySound(entity->sounds[RandInt(0, entity->num_sounds - 1)]);
+            PlaySound(entity->sounds[randint(0, entity->num_sounds - 1)]);
         AddEntity(projectiles, projectile);
     }
 }
@@ -330,8 +332,8 @@ void EntityIntercept(Entity *entity, const float x, const float y, const float w
     const double xb = x + w / 2.0;
     const double yb = y + h / 2.0;
     const double alpha = atan2(yb - ya, xb - xa);
-    entity->velocity_x = SetVelocityX(cos(alpha) * (1 + RandInt(-100 + entity->stability, 100 - entity->stability) / 100.0));
-    entity->velocity_y = SetVelocityY(sin(alpha) * (1 + RandInt(-100 + entity->stability, 100 - entity->stability) / 100.0));
+    entity->velocity_x = set_velocity_x(cos(alpha) * (1 + randint(-100 + entity->stability, 100 - entity->stability) / 100.0));
+    entity->velocity_y = set_velocity_y(sin(alpha) * (1 + randint(-100 + entity->stability, 100 - entity->stability) / 100.0));
 }
 
 void ProcessDroneAI(Entity *e) {
@@ -339,7 +341,13 @@ void ProcessDroneAI(Entity *e) {
     {
     case DRONE:
         MoveEntity(e, 1);
-        EntityShoot(e, drone->projectiles, regular_bullet,
+        Entity *ammo;
+        if (e->prestige) {
+            ammo = raw_plasma_orb;
+        } else {
+            ammo = regular_bullet;
+        }
+        EntityShoot(e, drone->projectiles, ammo,
                     player->hitbox.x, player->hitbox.y,
                     player->hitbox.w, player->hitbox.h);
         break;
@@ -355,7 +363,7 @@ void ProcessDroneAI(Entity *e) {
                     player->hitbox.w, player->hitbox.h);
         break;
     case DRONE_HUNTER:
-        if (AreEntitiesNear(e, player, HEIGHT - ScaleHeight(128))) {
+        if (AreEntitiesNear(e, player, HEIGHT - scale_height(128))) {
             EntityAim(e, player->hitbox.x, player->hitbox.y,
                       player->hitbox.w, player->hitbox.h);
             EntityShoot(e, drone->projectiles, sniper_bullet,
@@ -464,7 +472,7 @@ void CheckCollisions(void) {
             }
             if (IsEntityDead(node->entity)) {
                 node->entity->AI_lifetime = 5;
-                node->entity->velocity_y = SetVelocityY(1);
+                node->entity->velocity_y = set_velocity_y(1);
                 node->entity->speed = 5;
                 GainScore(node->entity, game_difficulty);
             }
@@ -484,11 +492,11 @@ void CheckCollisions(void) {
 void HandleSummonLogic(void) {
     summon_delay -= DELTA_TIME;
     if (summon_delay <= 0) {
-        summon_delay += RandInt((int)(summon_delay_max / 5. * 100), (int)(summon_delay_max * 100)) / 100.;
+        summon_delay += randdouble(summon_delay_max / 5., summon_delay_max); // randdouble
         summon_delay_max -= DELTA_TIME;
 
         Entity *e = CreateEntity();
-        const int category = RandInt(0, 49);
+        const int category = randint(0, 49);
 
         if (easter_egg || category < 15) CloneEntity(e, drone_sb);
         else if (category < 20) CloneEntity(e, drone_nova);
@@ -498,20 +506,24 @@ void HandleSummonLogic(void) {
         int lifetime = category < 15 || category == 20 ? -7 : 10;
         if (category >= 15 && category < 20) lifetime = 15;
 
-        const int prestige = RandInt(0, 10000);
+        const int prestige = randint(0, 10000);
         if (prestige < 100) {
             e->prestige = 1;
             AssignTexturePackToEntity(e, res.silver_drone_frames);
+            if (category > 20)
+                AssignSoundPackToEntity(e, res.plasma_pistol_sounds);
         } else if (prestige == 100) {
             e->prestige = 2;
             AssignTexturePackToEntity(e, res.gold_drone_frames);
+            if (category > 20)
+                AssignSoundPackToEntity(e, res.plasma_pistol_sounds);
         }
 
-        const int side = RandInt(0, 1);
-        const float y = (float)RandInt(0, HEIGHT - (int)drone->hitbox.h);
+        const _Bool side = randbool();
+        const float y = randfloat(0, (float)HEIGHT - drone->hitbox.h); // randfloat
         const float x = side ? (float)WIDTH + drone->hitbox.w : -drone->hitbox.w;
         SummonEntity(e, lifetime, x, y);
-        e->velocity_x = SetVelocityX(side ? -1 : 1);
+        e->velocity_x = set_velocity_x(side ? -1 : 1);
         AddEntity(ennemies, e);
     }
 }
@@ -526,11 +538,11 @@ void EnableEntityAI(Entity *entity, const int lifetime) {
 }
 
 _Bool AreEntitiesNear(const Entity *entity1, const Entity *entity2, const double threshold) {
-    return Distance(entity1->hitbox.x, entity1->hitbox.y, entity2->hitbox.x, entity2->hitbox.y) < threshold;
+    return distance(entity1->hitbox.x, entity1->hitbox.y, entity2->hitbox.x, entity2->hitbox.y) < threshold;
 }
 
 _Bool AreEntitiesFar(const Entity *entity1, const Entity *entity2, const double threshold) {
-    return Distance(entity1->hitbox.x, entity1->hitbox.y, entity2->hitbox.x, entity2->hitbox.y) > threshold;
+    return distance(entity1->hitbox.x, entity1->hitbox.y, entity2->hitbox.x, entity2->hitbox.y) > threshold;
 }
 
 _Bool IsEntityAIEnabled(const Entity *entity) {

@@ -24,6 +24,7 @@
 #include "audio.h"           // Chargement et lecture audio
 #include "menu.h"
 #include "input.h"
+#include "rng.h"
 
 void LoadResourcePack(ResourceManager *res) {
     res->explosive_mark             = LoadTexture("explosive_mark.png");
@@ -50,6 +51,7 @@ void LoadResourcePack(ResourceManager *res) {
     res->regular_bullet_frames = CreateTexturePack("regular_bullet", VOID, 0, 0);
     res->sniper_bullet_frames  = CreateTexturePack("sniper_bullet", VOID, 0, 0);
     res->plasma_orb_frames       = CreateTexturePack("plasma_orb", VOID, 0, 0);
+    res->raw_plasma_orb_frames = CreateTexturePack("raw_plasma_orb", VOID, 0, 0);
     res->nova_orb_frames         = CreateTexturePack("nova_orb", VOID, 0, 0);
 
     res->magnum_pistol_sounds = CreateSoundPack("magnum", 4);
@@ -83,6 +85,7 @@ void FreeResourcePack(const ResourceManager *res) {
     DestroyTexturePack(res->regular_bullet_frames);
     DestroyTexturePack(res->sniper_bullet_frames);
     DestroyTexturePack(res->plasma_orb_frames);
+    DestroyTexturePack(res->raw_plasma_orb_frames);
     DestroyTexturePack(res->nova_orb_frames);
 
     DestroySoundPack(res->magnum_pistol_sounds);
@@ -235,7 +238,7 @@ int DifficultyMenuShouldTransition(void) {
 // --------------------------------------------------------
 void InitGame(void) {
     drone_hunter->aim_delay = 1;
-    SummonEntity(player, 0, (float)(WIDTH / 2. - ScaleWidth(64)), (float)(HEIGHT / 2. - ScaleHeight(64)));
+    SummonEntity(player, 0, (float)(WIDTH / 2. - scale_width(64)), (float)(HEIGHT / 2. - scale_height(64)));
     player->speed = 8;
     PlayMusic(current_music, -1);
     SDL_ShowCursor(SDL_DISABLE);
@@ -284,7 +287,7 @@ int GameShouldTransition(void) {
 // --------------------------------------------------------
 void InitCinematic(void) {
     EnableEntityAI(player, 3);
-    player->velocity_y = SetVelocityY(1);
+    player->velocity_y = set_velocity_y(1);
     player->speed = 5;
     player->effect = 0;
 }
@@ -338,8 +341,8 @@ void InitGameOver(void) {
     text_input = SDL_TRUE;
     char score_str[16];
     sprintf(score_str, "SCORE: %d", player_score);
-    score_title = CreateSolidText(Rect(0,  3 * HEIGHT / 10, 1, 1, 0), VOID, score_str, font_large, WHITE);
-    CenteredAbs(&score_title->rect);
+    score_title = CreateSolidText(rect(0,  3 * HEIGHT / 10, 1, 1, 0), VOID, score_str, font_large, WHITE);
+    centered_abs(&score_title->rect);
 }
 
 void UpdateGameOver(void) {
@@ -423,9 +426,10 @@ int WinMain(int argc, char *argv[])
 int main(int argc, char *argv[])
 #endif
 {
-    srand(time(NULL));
     if (InitEngine() != 0)
         return -1;
+
+    rng_seed_auto();
 
     // Initialisation des polices
     font_small  = 15;
@@ -435,10 +439,10 @@ int main(int argc, char *argv[])
     font_jumbo  = 200;
 
     // Définition des zones pour les boutons
-    level1_container = Rect(WIDTH / 5, HEIGHT / 5, WIDTH / 5, HEIGHT / 5, 0);
-    level2_container = Rect(3 * WIDTH / 5, HEIGHT / 5, WIDTH / 5, HEIGHT / 5, 0);
-    level3_container = Rect(WIDTH / 5, 3 * HEIGHT / 5, WIDTH / 5, HEIGHT / 5, 0);
-    level4_container = Rect(3 * WIDTH / 5, 3 * HEIGHT / 5, WIDTH / 5, HEIGHT / 5, 0);
+    level1_container = rect(WIDTH / 5, HEIGHT / 5, WIDTH / 5, HEIGHT / 5, 0);
+    level2_container = rect(3 * WIDTH / 5, HEIGHT / 5, WIDTH / 5, HEIGHT / 5, 0);
+    level3_container = rect(WIDTH / 5, 3 * HEIGHT / 5, WIDTH / 5, HEIGHT / 5, 0);
+    level4_container = rect(3 * WIDTH / 5, 3 * HEIGHT / 5, WIDTH / 5, HEIGHT / 5, 0);
 
     LoadResourcePack(&res);
 
@@ -450,34 +454,34 @@ int main(int argc, char *argv[])
     InitHUD();
 
     // Création des éléments de l'interface utilisateur
-    cursor         = CreateSolid(Rect(0, 0, 32, 32, 1), VOID, "crosshair.png");
-    easy_button        = CreateSolidText(Rect(0, HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0),
-                                      Color(0,0,200,255), "EASY", font_large, WHITE);
-    medium_button        = CreateSolidText(Rect(0, 2 * HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0),
-                                      Color(0,200,0,255), "MEDIUM", font_large, WHITE);
-    hard_button        = CreateSolidText(Rect(0, 3 * HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0),
-                                      Color(200,200,0,255), "HARD", font_large, WHITE);
-    harder_button        = CreateSolidText(Rect(0, 4 * HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0),
-                                      Color(200,0,0,255), "HARDER", font_large, WHITE);
-    insane_button        = CreateSolidText(Rect(0, 5 * HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0),
-                                      Color(200,0,200,255), "INSANE", font_large, WHITE);
-    restart_button = CreateSolidText(Rect(0, 3 * HEIGHT / 4, WIDTH / 5, HEIGHT / 9, 0),
-                                      Color(100,100,100,255), "RESTART", 45, WHITE);
-    game_over_title= CreateSolidText(Rect(0, 3 * HEIGHT / 20, 1, 1, 0), VOID, "GAME OVER", font_xxl, WHITE);
-    pause_title    = CreateSolidText(Rect(0, 0, 1, 1, 0), VOID, "PAUSE", font_xxl, WHITE);
-    player_info.title = CreateSolidText(Rect(0, 11 * HEIGHT / 20, 1, 1, 0),
+    cursor         = CreateSolid(rect(0, 0, 32, 32, 1), VOID, "crosshair.png");
+    easy_button        = CreateSolidText(rect(0, HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0),
+                                      color(0,0,200,255), "EASY", font_large, WHITE);
+    medium_button        = CreateSolidText(rect(0, 2 * HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0),
+                                      color(0,200,0,255), "MEDIUM", font_large, WHITE);
+    hard_button        = CreateSolidText(rect(0, 3 * HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0),
+                                      color(200,200,0,255), "HARD", font_large, WHITE);
+    harder_button        = CreateSolidText(rect(0, 4 * HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0),
+                                      color(200,0,0,255), "HARDER", font_large, WHITE);
+    insane_button        = CreateSolidText(rect(0, 5 * HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0),
+                                      color(200,0,200,255), "INSANE", font_large, WHITE);
+    restart_button = CreateSolidText(rect(0, 3 * HEIGHT / 4, WIDTH / 5, HEIGHT / 9, 0),
+                                      color(100,100,100,255), "RESTART", 45, WHITE);
+    game_over_title= CreateSolidText(rect(0, 3 * HEIGHT / 20, 1, 1, 0), VOID, "GAME OVER", font_xxl, WHITE);
+    pause_title    = CreateSolidText(rect(0, 0, 1, 1, 0), VOID, "PAUSE", font_xxl, WHITE);
+    player_info.title = CreateSolidText(rect(0, 11 * HEIGHT / 20, 1, 1, 0),
                                       VOID, "ENTER YOUR NAME", font_large, WHITE);
     score_title    = NULL; // Créé lors de l'initialisation de l'état Game Over
 
-    CenteredAbs(&easy_button->rect);
-    CenteredAbs(&medium_button->rect);
-    CenteredAbs(&hard_button->rect);
-    CenteredAbs(&harder_button->rect);
-    CenteredAbs(&insane_button->rect);
-    CenteredAbs(&restart_button->rect);
-    CenteredAbs(&game_over_title->rect);
-    CenteredCoord(&pause_title->rect);
-    CenteredAbs(&player_info.title->rect);
+    centered_abs(&easy_button->rect);
+    centered_abs(&medium_button->rect);
+    centered_abs(&hard_button->rect);
+    centered_abs(&harder_button->rect);
+    centered_abs(&insane_button->rect);
+    centered_abs(&restart_button->rect);
+    centered_abs(&game_over_title->rect);
+    centered_coord(&pause_title->rect);
+    centered_abs(&player_info.title->rect);
 
     ennemies     = CreateEntityList();
     player       = CreateEntity();
@@ -488,6 +492,7 @@ int main(int argc, char *argv[])
     regular_bullet = CreateEntity();
     sniper_bullet  = CreateEntity();
     plasma_orb         = CreateEntity();
+    raw_plasma_orb = CreateEntity();
     nova_orb           = CreateEntity();
 
     // Initialisation des entités
@@ -495,6 +500,7 @@ int main(int argc, char *argv[])
     InitEntity(regular_bullet, 16, 16, 0, 0, 0, 0, 20, 0, 0, 0, 0);
     InitEntity(sniper_bullet, 16, 16, 0, 0, 0, 0, 30, 0, 0, 0, 0);
     InitEntity(plasma_orb, 16, 16, 0, 0, 0, 0, 20, 0, 0, 0, 0);
+    InitEntity(raw_plasma_orb, 16, 16, 0, 0, 0, 0, 20, 0, 0, 0, 0);
     InitEntity(nova_orb, 24, 24, 0, 0, 0, 0, 15, 0, 0, 0, 0);
     nova_orb->elementary = 1;
 
@@ -506,6 +512,7 @@ int main(int argc, char *argv[])
     AssignTexturePackToEntity(drone_hunter, res.drone_frames);
     AssignTexturePackToEntity(regular_bullet, res.regular_bullet_frames);
     AssignTexturePackToEntity(plasma_orb, res.plasma_orb_frames);
+    AssignTexturePackToEntity(raw_plasma_orb, res.raw_plasma_orb_frames);
     AssignTexturePackToEntity(nova_orb, res.nova_orb_frames);
     AssignTexturePackToEntity(sniper_bullet, res.sniper_bullet_frames);
 
@@ -605,6 +612,7 @@ int main(int argc, char *argv[])
     DestroyEntity(regular_bullet);
     DestroyEntity(sniper_bullet);
     DestroyEntity(plasma_orb);
+    DestroyEntity(raw_plasma_orb);
     DestroyEntity(nova_orb);
     QuitEngine();
     return 0;

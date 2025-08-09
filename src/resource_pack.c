@@ -44,7 +44,7 @@ AnimationPack* CreateAnimationPack(const char *base_name, const char *anim_name,
     /* Recherche des frames nommées "assets/images/<base_name>1.png", "assets/images/<base_name>2.png", etc. */
     while (1) {
         sprintf(filename, "assets/images/%s%d.png", base_name, count + 1);
-        if (!FileExists(filename))
+        if (!file_exists(filename))
             break;
         count++;
     }
