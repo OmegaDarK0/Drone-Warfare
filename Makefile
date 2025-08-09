@@ -16,7 +16,7 @@ MAKE := make
 
 # Flags système
 ifeq ($(PLATFORM),windows)
-	SYS_LFLAGS = -lmingw32 -mwindows
+	SYS_LFLAGS = -lbcrypt -lmingw32 -mwindows
 else ifeq ($(PLATFORM),linux)
 	SYS_LFLAGS = -ldl
 else
