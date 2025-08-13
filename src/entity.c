@@ -38,10 +38,10 @@ void InitEntity(Entity *entity, const float width, const float height, const int
     entity->speed = speed;
     entity->velocity_x = 0;
     entity->velocity_y = 0;
-    entity->shoot_rate_min = rate_min;
-    entity->shoot_rate_max = rate_max;
-    entity->shoot_delay = 0;
-    entity->aim_delay = 0;
+    entity->fire_rate_min = rate_min;
+    entity->fire_rate_max = rate_max;
+    entity->fire_cooldown = 0;
+    entity->aim_cooldown = 0;
     entity->precision = precision;
     entity->stability = stability;
     entity->aiming = 0;
@@ -54,7 +54,7 @@ void InitEntity(Entity *entity, const float width, const float height, const int
     entity->type = category;
     entity->prestige = 0;
     entity->frame_time = 0.05;
-    entity->frame_delay = 0;
+    entity->frame_cooldown = 0;
     entity->hitbox.x = 0;
     entity->hitbox.y = 0;
     entity->hitbox.w = (float)(width / 1920.0 * WIDTH);
@@ -75,10 +75,10 @@ void CloneEntity(Entity *clone, const Entity *entity) {
     clone->speed = entity->speed;
     clone->velocity_x = entity->velocity_x;
     clone->velocity_y = entity->velocity_y;
-    clone->shoot_rate_min = entity->shoot_rate_min;
-    clone->shoot_rate_max = entity->shoot_rate_max;
-    clone->shoot_delay = entity->shoot_delay;
-    clone->aim_delay = entity->aim_delay;
+    clone->fire_rate_min = entity->fire_rate_min;
+    clone->fire_rate_max = entity->fire_rate_max;
+    clone->fire_cooldown = entity->fire_cooldown;
+    clone->aim_cooldown = entity->aim_cooldown;
     clone->precision = entity->precision;
     clone->stability = entity->stability;
     clone->aiming = entity->aiming;
@@ -91,7 +91,7 @@ void CloneEntity(Entity *clone, const Entity *entity) {
     clone->type = entity->type;
     clone->prestige = entity->prestige;
     clone->frame_time = entity->frame_time;
-    clone->frame_delay = entity->frame_delay;
+    clone->frame_cooldown = entity->frame_cooldown;
     clone->frame_index = entity->frame_index;
     //clone->reverse_frame_mode = entity->reverse_frame_mode;
     //clone->num_frames = entity->num_frames;
@@ -122,8 +122,8 @@ void UpdateEntityState(Entity *entity) {
         else if (entity->AI_lifetime > 0)
             entity->AI_lifetime -= DELTA_TIME;
     }
-    if (entity->frame_delay <= 0) {
-        entity->frame_delay += entity->frame_time;
+    if (entity->frame_cooldown <= 0) {
+        entity->frame_cooldown += entity->frame_time;
         if (entity->texture_pack->animations[entity->current_animation]->reverse_frame_mode == 0 && ++entity->frame_index == entity->texture_pack->animations[entity->current_animation]->num_frames)
             entity->frame_index = 0;
         else if (entity->texture_pack->animations[entity->current_animation]->reverse_frame_mode > 0 && ++entity->frame_index == entity->texture_pack->animations[entity->current_animation]->num_frames) {
@@ -134,10 +134,10 @@ void UpdateEntityState(Entity *entity) {
             entity->texture_pack->animations[entity->current_animation]->reverse_frame_mode *= -1;
         }
     } else {
-        entity->frame_delay -= DELTA_TIME;
+        entity->frame_cooldown -= DELTA_TIME;
     }
-    if (entity->shoot_delay > 0)
-        entity->shoot_delay -= DELTA_TIME;
+    if (entity->fire_cooldown > 0)
+        entity->fire_cooldown -= DELTA_TIME;
     if (entity->effect > 0)
         entity->effect -= DELTA_TIME;
     if (entity->highlight > 0)
@@ -283,26 +283,26 @@ void DisplayEntityLaserBeam(const Entity *entity){
 void EntityCease(Entity *entity){
     if (entity->aiming){
         entity->aiming = 0;
-        entity->aim_delay = 1;
+        entity->aim_cooldown = 1;
     }
 }
 
 void EntityAim(Entity *entity, const float x, const float y, const float w, const float h) {
-    if (entity->shoot_delay <= 0 && entity->aim_delay > 0){
+    if (entity->fire_cooldown <= 0 && entity->aim_cooldown > 0){
         entity->aiming = 1;
         entity->target.x = x;
         entity->target.y = y;
         entity->target.w = w;
         entity->target.h = h;
-        entity->aim_delay -= DELTA_TIME;
-        if (entity->aim_delay <= 0)
+        entity->aim_cooldown -= DELTA_TIME;
+        if (entity->aim_cooldown <= 0)
             EntityCease(entity);
     }
 
 }
 
 void EntityShoot(Entity *entity, EntityList *projectiles, const Entity *ammo, const float x, const float y, const float w, const float h) {
-    if (!entity->aiming && entity->shoot_delay <= 0) {
+    if (!entity->aiming && entity->fire_cooldown <= 0) {
         Entity *projectile = CreateEntity();
         CloneEntity(projectile, ammo);
         EnableEntityAI(projectile, 5);
@@ -318,8 +318,8 @@ void EntityShoot(Entity *entity, EntityList *projectiles, const Entity *ammo, co
         projectile->velocity_y = set_velocity_y(sin(alpha) * (1 + randint(-100 + entity->precision, 100 - entity->precision) / 100.0));
         projectile->hitbox.x = (float)(entity->hitbox.x + entity->hitbox.w / 2.0 - projectile->hitbox.w / 2.0);
         projectile->hitbox.y = (float)(entity->hitbox.y + entity->hitbox.h / 2.0 - projectile->hitbox.h / 2.0);
-        entity->shoot_delay += randdouble(entity->shoot_rate_min, entity->shoot_rate_max); // randdouble
-        if (entity->effect > 0) entity->shoot_delay *= 2;
+        entity->fire_cooldown += randdouble(entity->fire_rate_min, entity->fire_rate_max); // randdouble
+        if (entity->effect > 0) entity->fire_cooldown *= 2;
         if (entity->sounds)
             PlaySound(entity->sounds[randint(0, entity->num_sounds - 1)]);
         AddEntity(projectiles, projectile);
@@ -490,10 +490,10 @@ void CheckCollisions(void) {
 }
 
 void HandleSummonLogic(void) {
-    summon_delay -= DELTA_TIME;
-    if (summon_delay <= 0) {
-        summon_delay += randdouble(summon_delay_max / 5., summon_delay_max); // randdouble
-        summon_delay_max -= DELTA_TIME;
+    summon_cooldown -= DELTA_TIME;
+    if (summon_cooldown <= 0) {
+        summon_cooldown += randdouble(summon_cooldown_max / 5., summon_cooldown_max); // randdouble
+        summon_cooldown_max -= DELTA_TIME;
 
         Entity *e = CreateEntity();
         const int category = randint(0, 49);

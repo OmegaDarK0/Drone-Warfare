@@ -151,7 +151,7 @@ void InitLevelMenu(void) {
     current_background = NULL;
     player_score = 0;
     entity_count = 0;
-    summon_delay = 3;
+    summon_cooldown = 3;
     key_pause = SDL_FALSE;
     key_up = SDL_FALSE;
     key_down = SDL_FALSE;
@@ -222,7 +222,7 @@ void RenderDifficultyMenu(void) {
     ClearScreen();
     DrawBackground(current_background);
     DrawButton(easy_button, 1, cursor->rect.x, cursor->rect.y, 6);
-    DrawButton(medium_button, 1, cursor->rect.x, cursor->rect.y, 5);
+    DrawButton(normal_button, 1, cursor->rect.x, cursor->rect.y, 5);
     DrawButton(hard_button, 1, cursor->rect.x, cursor->rect.y, 1);
     DrawButton(harder_button, 1, cursor->rect.x, cursor->rect.y, 3);
     DrawButton(insane_button, 1, cursor->rect.x, cursor->rect.y, 2);
@@ -237,7 +237,7 @@ int DifficultyMenuShouldTransition(void) {
 // Etat GAME
 // --------------------------------------------------------
 void InitGame(void) {
-    drone_hunter->aim_delay = 1;
+    drone_hunter->aim_cooldown = 1;
     SummonEntity(player, 0, (float)(WIDTH / 2. - scale_width(64)), (float)(HEIGHT / 2. - scale_height(64)));
     player->speed = 8;
     PlayMusic(current_music, -1);
@@ -457,8 +457,8 @@ int main(int argc, char *argv[])
     cursor         = CreateSolid(rect(0, 0, 32, 32, 1), VOID, "crosshair.png");
     easy_button        = CreateSolidText(rect(0, HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0),
                                       color(0,0,200,255), "EASY", font_large, WHITE);
-    medium_button        = CreateSolidText(rect(0, 2 * HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0),
-                                      color(0,200,0,255), "MEDIUM", font_large, WHITE);
+    normal_button        = CreateSolidText(rect(0, 2 * HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0),
+                                      color(0,200,0,255), "NORMAL", font_large, WHITE);
     hard_button        = CreateSolidText(rect(0, 3 * HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0),
                                       color(200,200,0,255), "HARD", font_large, WHITE);
     harder_button        = CreateSolidText(rect(0, 4 * HEIGHT / 6, WIDTH / 5, HEIGHT / 9, 0),
@@ -474,7 +474,7 @@ int main(int argc, char *argv[])
     score_title    = NULL; // Créé lors de l'initialisation de l'état Game Over
 
     centered_abs(&easy_button->rect);
-    centered_abs(&medium_button->rect);
+    centered_abs(&normal_button->rect);
     centered_abs(&hard_button->rect);
     centered_abs(&harder_button->rect);
     centered_abs(&insane_button->rect);
@@ -594,7 +594,7 @@ int main(int argc, char *argv[])
 
     DestroySolid(cursor);
     DestroySolid(easy_button);
-    DestroySolid(medium_button);
+    DestroySolid(normal_button);
     DestroySolid(hard_button);
     DestroySolid(harder_button);
     DestroySolid(insane_button);

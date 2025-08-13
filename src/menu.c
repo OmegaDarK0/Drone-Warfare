@@ -39,7 +39,7 @@ void SetDifficultyMenu(void) {
     difficulty_menu[0].drone_config[0] = (EntityConfig){5, 2, 0.75, 4, 1.5, 15, 60, 100};
     difficulty_menu[0].drone_config[1] = (EntityConfig){15, 0, 1, 6, 0, 0, 0, 100};
     difficulty_menu[0].drone_config[2] = (EntityConfig){25, 5, 0.75, 2, 1.5, 15, 50, 100};
-    difficulty_menu[0].drone_config[3] = (EntityConfig){50, 5, 1, 5, 2, 20, 100, 100};
+    difficulty_menu[0].drone_config[3] = (EntityConfig){35, 5, 1, 5, 2, 20, 100, 100};
     difficulty_menu[0].summon_delay = 6;
     difficulty_menu[1].area = (SDL_Rect){2*WIDTH/5, 2*HEIGHT/6, WIDTH/5, HEIGHT/9};
     difficulty_menu[1].difficulty = 2;
@@ -64,7 +64,7 @@ void SetDifficultyMenu(void) {
     difficulty_menu[3].summon_delay = 3;
     difficulty_menu[4].area = (SDL_Rect){2*WIDTH/5, 5*HEIGHT/6, WIDTH/5, HEIGHT/9};
     difficulty_menu[4].difficulty = 5;
-    difficulty_menu[4].drone_config[0] = (EntityConfig){25, 20, 1.75, 8, .3, 3, 100, 100};
+    difficulty_menu[4].drone_config[0] = (EntityConfig){30, 20, 1.75, 8, .3, 3, 100, 100};
     difficulty_menu[4].drone_config[1] = (EntityConfig){40, 0, 3, 14, 0, 0, 0, 50};
     difficulty_menu[4].drone_config[2] = (EntityConfig){50, 25, 1.75, 4, .3, 3, 90, 100};
     difficulty_menu[4].drone_config[3] = (EntityConfig){75, 40, 2, 10, .4, 4, 100, 100};
@@ -129,7 +129,7 @@ _Bool HandleDifficultySelection(const SDL_Point *pos) {
         InitEntity(drone_hunter, 128, 128, DRONE_HUNTER,
                    cfg[3].HP, cfg[3].damage, cfg[3].m_damage, cfg[3].speed,
                    cfg[3].rate_min, cfg[3].rate_max, cfg[3].precision, cfg[3].stability);
-        summon_delay_max = difficulty_menu[idx].summon_delay;
+        summon_cooldown_max = difficulty_menu[idx].summon_delay;
         game_difficulty = difficulty_menu[idx].difficulty;
         return 1;
     }
