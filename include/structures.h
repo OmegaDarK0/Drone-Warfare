@@ -68,10 +68,10 @@ struct Entity{
     double speed;
     double velocity_x;
     double velocity_y;
-    double shoot_rate_min;
-    double shoot_rate_max;
-    double shoot_delay;
-    double aim_delay;
+    double fire_rate_min;
+    double fire_rate_max;
+    double fire_cooldown;
+    double aim_cooldown;
     int precision;
     int stability;
     _Bool aiming;
@@ -86,7 +86,7 @@ struct Entity{
     int prestige;
     // BACK
     double frame_time;
-    double frame_delay;
+    double frame_cooldown;
     int frame_index;
     int current_animation;
     //int reverse_frame_mode;

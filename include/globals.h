@@ -60,7 +60,7 @@ EXTERN EntityList *ennemies;
    == UI / Solides ==
    ========================= */
 EXTERN Solid *cursor;
-EXTERN Solid *easy_button, *medium_button, *hard_button, *harder_button, *insane_button;
+EXTERN Solid *easy_button, *normal_button, *hard_button, *harder_button, *insane_button;
 EXTERN Solid *restart_button, *game_over_title, *pause_title, *score_title;
 
 /* =========================
@@ -73,8 +73,8 @@ EXTERN SDL_Rect level3_container, level4_container;
    == Autres ==
    ========================= */
 EXTERN int entity_count;
-EXTERN double summon_delay;
-EXTERN double summon_delay_max;
+EXTERN double summon_cooldown;
+EXTERN double summon_cooldown_max;
 
 #undef EXTERN
 #endif // GLOBALS_H
