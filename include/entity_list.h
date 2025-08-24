@@ -7,8 +7,8 @@ EntityList* CreateEntityList(void);
 void AddEntity(EntityList *list, Entity *entity);
 void RemoveEntity(EntityList *list, const Entity *entity);
 void DestroyEntityList(EntityList *list);
-void ClearEntityList(EntityList *list);
-void IterateEntities(const EntityList *list, void (*func)(const Entity*));
+void ClearEntityList(EntityList *list, int filter);
+void IterateEntities(const EntityList *list, void (*func)(Entity*), int filter);
 
 #endif // ENTITY_LIST_H
 

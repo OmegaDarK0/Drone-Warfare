@@ -25,7 +25,7 @@ void SetPosition(SDL_Rect *rect, int x, int y);
 void SetPositionF(SDL_FRect *frect, float x, float y);
 
 // Détection d'intersection entre deux zones
-_Bool Intersecting(SDL_FRect frect1, SDL_FRect frect2);
+//_Bool Intersecting(SDL_FRect frect1, SDL_FRect frect2);
 
 // Fonctions utilitaires liées aux textures
 void GetTextureSize(SDL_Texture *texture, int *width, int *height);

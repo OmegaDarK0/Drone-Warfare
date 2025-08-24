@@ -18,7 +18,7 @@ void DisplayEffect(const Entity *entity);
 void RenderScore(void);
 
 // Augmente le score en fonction des dégâts, de la catégorie et d'un paramètre difficulté
-void GainScore(const Entity *entity, int difficulty);
+void GainScore(const Entity *entity);
 
 #endif // HUD_H
 

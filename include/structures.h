@@ -6,7 +6,7 @@
 
 typedef enum GameState GameState;
 typedef enum AnimationType AnimationType;
-typedef enum DroneType DroneType;
+typedef enum EntityType DroneType;
 typedef struct Entity Entity;
 typedef struct EntityNode EntityNode;
 typedef struct EntityList EntityList;
@@ -20,14 +20,15 @@ typedef struct PlayerInfo PlayerInfo;
 typedef struct EntityConfig EntityConfig;
 typedef struct LevelMenuEntry LevelMenuEntry;
 typedef struct DifficultyMenuEntry DifficultyMenuEntry;
-typedef struct CollisionPair CollisionPair;
+typedef struct GridCell GridCell;
 
 enum GameState{
     STATE_MENU,
     STATE_DIFFICULTY,
     STATE_GAME,
     STATE_CINEMATIC,
-    STATE_GAMEOVER
+    STATE_GAMEOVER,
+    NUM_GAME_STATES
 };
 
 enum AnimationType{
@@ -38,11 +39,26 @@ enum AnimationType{
     NUM_ANIMATION_TYPES  // Nombre total d'états
 };
 
-enum DroneType{
+enum EntityClass{
+    UNIT,
+    ENEMY,
+    PLAYER,
+    PROJECTILE,
+    NUM_ENTITY_CLASSES
+};
+
+enum EntityType{
+    NONE,
     DRONE,
-    DRONE_SUICIDE_BOMBER,
+    DRONE_EXPLOSIVE,
     DRONE_NOVA,
-    DRONE_HUNTER
+    DRONE_HUNTER,
+    PROJECTILE_PLASMA_ORB,
+    PROJECTILE_RAW_PLASMA_ORB,
+    PROJECTILE_NOVA_ORB,
+    PROJECTILE_REGULLAR_BULLET,
+    PROJECTILE_SNIPER_BULLET,
+    NUM_ENTITY_TYPES
 };
 
 struct EntityNode{
@@ -56,52 +72,43 @@ struct EntityList{
 };
 
 struct Entity{
-    // CORE
     _Bool AI;
     double AI_lifetime;
-    int ID;
-    // FRONT
-    double hitpoints;
-    double hitpoints_max;
+    double health;
+    double health_max;
     double damage;
-    double melee_damage;
     double speed;
     double velocity_x;
     double velocity_y;
     double fire_rate_min;
     double fire_rate_max;
-    double fire_cooldown;
-    double aim_cooldown;
+    double fire_delay;
+    double aim_delay;
     int precision;
     int stability;
     _Bool aiming;
-    // MIDDLE
-    /*double hit_cooldown;
-    _Bool has_hit;
-    _Bool is_projectile;*/
-    int elementary;
+    double acc_damage;
     double effect;
-    double highlight;
+    double ammo_count;
+    double ammo_max;
+    double ammo_cost;
+    double ammo_reload;
+    int class;
     int type;
     int prestige;
-    // BACK
-    double frame_time;
-    double frame_cooldown;
     int frame_index;
+    double frame_time;
+    double frame_delay;
+    double highlight;
     int current_animation;
-    //int reverse_frame_mode;
-    //int num_frames;
     int num_sounds;
-    //int extended_frames;
     SDL_FRect hitbox;
     SDL_FRect target;
-    //SDL_Texture **frames;
-    //SDL_Texture **frames_highlighted;
-    //SDL_Texture *frame_dead;
     TexturePack *texture_pack;
     SDL_Texture *mark;
     Mix_Chunk **sounds;
-    EntityList *projectiles;
+    EntityList *team;
+    Entity *ammo;
 };
 
 /* *****************************************************************************
@@ -183,9 +190,8 @@ struct PlayerInfo{
 };
 
 struct EntityConfig{
-    double HP;
+    double health;
     double damage;
-    double m_damage;
     double speed;
     double rate_min;
     double rate_max;
@@ -203,13 +209,19 @@ struct LevelMenuEntry{
 struct DifficultyMenuEntry{
     SDL_Rect area;
     int difficulty;
-    EntityConfig drone_config[4]; // DRONE, DRONE_SB, DRONE_NOVA, DRONE_HUNTER
+    EntityConfig drone_config[4]; // DRONE, DRONE_EXPLOSIVE, DRONE_NOVA, DRONE_HUNTER
+    EntityConfig projectile_config[4]; //PROJECTILE_RAW_PLASMA_ORB, PROJECTILE_NOVA_ORB, PROJECTILE_REGULLAR_BULLET, PROJECTILE_SNIPER_BULLET,
     int summon_delay;
 };
 
-struct CollisionPair{
-    Entity *a;
-    Entity *b;
+#define GRID_CELL_SIZE 64
+#define GRID_WIDTH 128
+#define GRID_HEIGHT 128
+#define MAX_ENTITIES_PER_CELL 32
+
+struct GridCell {
+    Entity *entities[MAX_ENTITIES_PER_CELL];
+    int count;
 };
 
 #endif // STRUCTURES_H

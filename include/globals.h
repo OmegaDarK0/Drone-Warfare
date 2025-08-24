@@ -52,9 +52,9 @@ EXTERN int font_jumbo;
    == Entités du jeu ==
    ========================= */
 EXTERN Entity *player;
-EXTERN Entity *drone, *drone_sb, *drone_nova, *drone_hunter;
+EXTERN Entity *drone, *drone_explosive, *drone_nova, *drone_hunter;
 EXTERN Entity *regular_bullet, *sniper_bullet, *plasma_orb, *raw_plasma_orb, *nova_orb;
-EXTERN EntityList *ennemies;
+EXTERN EntityList *team1, *team2;
 
 /* =========================
    == UI / Solides ==
@@ -75,6 +75,9 @@ EXTERN SDL_Rect level3_container, level4_container;
 EXTERN int entity_count;
 EXTERN double summon_cooldown;
 EXTERN double summon_cooldown_max;
+
+EXTERN double DELTA_TIME;
+EXTERN double SMOOTHED_DT;
 
 #undef EXTERN
 #endif // GLOBALS_H
