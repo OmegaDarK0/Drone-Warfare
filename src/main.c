@@ -2,7 +2,6 @@
 #define DEFINE_GLOBALS
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <time.h>
 #include <string.h>
 #include <SDL2/SDL.h>
@@ -22,6 +21,7 @@
 #include "ui.h"              // Gestion de l'interface (boutons, texte, curseur)
 #include "images.h"          // Chargement d'images & textures
 #include "audio.h"           // Chargement et lecture audio
+#include "collision.h"
 #include "menu.h"
 #include "input.h"
 #include "rng.h"
@@ -158,7 +158,8 @@ void InitLevelMenu(void) {
     key_left = SDL_FALSE;
     key_right = SDL_FALSE;
     key_mouse = SDL_FALSE;
-    ClearEntityList(ennemies);
+    ClearEntityList(team1, -1);
+    ClearEntityList(team2, PLAYER);
     ResetPlayerInfo(&player_info);
     DestroySolid(score_title);
     RenderScore();
@@ -237,11 +238,12 @@ int DifficultyMenuShouldTransition(void) {
 // Etat GAME
 // --------------------------------------------------------
 void InitGame(void) {
-    drone_hunter->aim_cooldown = 1;
+    drone_hunter->aim_delay = 1;
     SummonEntity(player, 0, (float)(WIDTH / 2. - scale_width(64)), (float)(HEIGHT / 2. - scale_height(64)));
     player->speed = 8;
     PlayMusic(current_music, -1);
     SDL_ShowCursor(SDL_DISABLE);
+    AddEntity(team2, player);
 }
 
 void UpdateGame(void) {
@@ -251,14 +253,18 @@ void UpdateGame(void) {
     }
 
     if (!key_pause) {
-        UpdatePlayer();
-        HandleSummonLogic();
-        UpdateEntities();
-        UpdateProjectiles(drone->projectiles);
-        MoveEntity(player, 0);
-        UpdateEntityState(player);
-        UpdateProjectiles(player->projectiles);
-        CheckCollisions();
+        ClearGrid();
+        HandleSummonLogic(team1);
+        UpdateEntities(team1);
+        UpdateEntities(team2);
+        IterateEntities(team1, InsertIntoGrid, -1);
+        IterateEntities(team2, InsertIntoGrid, -1);
+        CheckGridCollisions(HandleCollision);
+        //UpdateProjectiles(drone->projectiles);
+        //MoveEntity(player, 0);
+        //UpdateEntityState(player);
+        //UpdateProjectiles(player->projectiles);
+        //CheckCollisions();
     }
 }
 
@@ -266,11 +272,15 @@ void RenderGame(void) {
     if (!key_pause) {
         ClearScreen();
         DrawBackground(current_background);
-        IterateEntities(drone->projectiles, DisplayEntity);
-        IterateEntities(player->projectiles, DisplayEntity);
-        IterateEntities(ennemies, DisplayEntityLaserBeam);
-        IterateEntities(ennemies, DisplayEntity);
-        DisplayEntity(player);
+        IterateEntities(team1, DisplayEntityLaserBeam, PROJECTILE);
+        IterateEntities(team2, DisplayEntityLaserBeam, PROJECTILE);
+        IterateEntities(team1, DisplayEntity, -1);
+        IterateEntities(team2, DisplayEntity, -1);
+        if (game_debug){
+            IterateEntities(team1, DisplayEntityHitbox, -1);
+            IterateEntities(team2, DisplayEntityHitbox, -1);
+            IterateEntities(team1, DisplayHealthBar, PROJECTILE);
+        }
         DisplayHUD(player);
         DisplayEffect(player);
         DisplayCursor(cursor->texture, cursor->rect);
@@ -279,7 +289,7 @@ void RenderGame(void) {
 }
 
 int GameShouldTransition(void) {
-    return player->hitpoints <= 0;
+    return player->health <= 0;
 }
 
 // --------------------------------------------------------
@@ -287,9 +297,9 @@ int GameShouldTransition(void) {
 // --------------------------------------------------------
 void InitCinematic(void) {
     EnableEntityAI(player, 3);
-    player->velocity_y = set_velocity_y(1);
-    player->speed = 5;
-    player->effect = 0;
+    //player->velocity_y = set_velocity_y(1);
+    //player->speed = 5;
+    //player->effect = 0;
 }
 
 void UpdateCinematic(void) {
@@ -302,12 +312,15 @@ void UpdateCinematic(void) {
         if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
             game_running = SDL_FALSE;
     }
-    const EntityNode *node = ennemies->head;
+    const EntityNode *node = team1->head;
     while (node) {
         const EntityNode *next_entity = node->next;
         UpdateEntityState(node->entity);
-        if (IsEntityDead(node->entity))
+        if (node->entity->class == ENEMY && IsEntityDead(node->entity)) {
             MoveEntity(node->entity, 1);
+            UpdateEntityState(node->entity);
+            node->entity->speed *= pow(1.5, DELTA_TIME);
+        }
         node = next_entity;
     }
     player->speed *= pow(1.25, DELTA_TIME);
@@ -319,7 +332,7 @@ void UpdateCinematic(void) {
 void RenderCinematic(void) {
     ClearScreen();
     DrawBackground(current_background);
-    IterateEntities(ennemies, DisplayEntity);
+    IterateEntities(team1, DisplayEntity, PROJECTILE);
     DrawRect(SCREEN, 0, 0, 0, 255 - (int)(1 + 254 * player->AI_lifetime / 3));
     DisplayEntity(player);
     RefreshScreen();
@@ -333,8 +346,8 @@ int CinematicShouldTransition(void) {
 // Etat GAME OVER
 // --------------------------------------------------------
 void InitGameOver(void) {
-    ClearEntityList(player->projectiles);
-    ClearEntityList(drone->projectiles);
+    //ClearEntityList(player->projectiles);
+    //ClearEntityList(drone->projectiles);
     SDL_ShowCursor(SDL_ENABLE);
     Mix_HaltMusic();
     SDL_StartTextInput();
@@ -431,6 +444,8 @@ int main(int argc, char *argv[])
 
     rng_seed_auto();
 
+    SMOOTHED_DT = 1.0 / FPS;
+
     // Initialisation des polices
     font_small  = 15;
     font_medium = 25;
@@ -483,31 +498,29 @@ int main(int argc, char *argv[])
     centered_coord(&pause_title->rect);
     centered_abs(&player_info.title->rect);
 
-    ennemies     = CreateEntityList();
-    player       = CreateEntity();
-    drone        = CreateEntity();
-    drone_sb     = CreateEntity();
-    drone_nova   = CreateEntity();
-    drone_hunter = CreateEntity();
-    regular_bullet = CreateEntity();
-    sniper_bullet  = CreateEntity();
-    plasma_orb         = CreateEntity();
-    raw_plasma_orb = CreateEntity();
-    nova_orb           = CreateEntity();
+    team1     = CreateEntityList();
+    team2     = CreateEntityList();
+    player       = CreateEntity(PLAYER, DRONE, 128, 128);
+    drone        = CreateEntity(ENEMY, DRONE, 128, 128);
+    drone_explosive     = CreateEntity(ENEMY, DRONE_EXPLOSIVE, 128, 128);
+    drone_nova   = CreateEntity(ENEMY, DRONE_NOVA, 141, 141);
+    drone_hunter = CreateEntity(ENEMY, DRONE_HUNTER, 128, 128);
+    regular_bullet = CreateEntity(PROJECTILE, PROJECTILE_REGULLAR_BULLET, 16, 16);
+    sniper_bullet  = CreateEntity(PROJECTILE, PROJECTILE_SNIPER_BULLET, 16, 16);
+    plasma_orb         = CreateEntity(PROJECTILE, PROJECTILE_PLASMA_ORB, 16, 16);
+    raw_plasma_orb = CreateEntity(PROJECTILE, PROJECTILE_RAW_PLASMA_ORB, 16, 16);
+    nova_orb           = CreateEntity(PROJECTILE, PROJECTILE_NOVA_ORB, 24, 24);
 
     // Initialisation des entités
-    InitEntity(player, 128, 128, 0, 100, 5, 1, 8, .15, .175, 90, 100);
-    InitEntity(regular_bullet, 16, 16, 0, 0, 0, 0, 20, 0, 0, 0, 0);
-    InitEntity(sniper_bullet, 16, 16, 0, 0, 0, 0, 30, 0, 0, 0, 0);
-    InitEntity(plasma_orb, 16, 16, 0, 0, 0, 0, 20, 0, 0, 0, 0);
-    InitEntity(raw_plasma_orb, 16, 16, 0, 0, 0, 0, 20, 0, 0, 0, 0);
-    InitEntity(nova_orb, 24, 24, 0, 0, 0, 0, 15, 0, 0, 0, 0);
-    nova_orb->elementary = 1;
+    InitEntity(player, 100, 60, 8, .15, .175, 90, 100);
+    InitEntity(plasma_orb, .1, 5, 20, 0, 0, 0, 0);
+
+    SetAmmo(player, plasma_orb);
 
     // Affecter les packs de textures et de sons aux entités en utilisant les ressources chargées
     AssignTexturePackToEntity(player, res.player_drone_frames);
     AssignTexturePackToEntity(drone, res.drone_frames);
-    AssignTexturePackToEntity(drone_sb, res.drone_frames);
+    AssignTexturePackToEntity(drone_explosive, res.drone_frames);
     AssignTexturePackToEntity(drone_nova, res.drone_frames);
     AssignTexturePackToEntity(drone_hunter, res.drone_frames);
     AssignTexturePackToEntity(regular_bullet, res.regular_bullet_frames);
@@ -517,7 +530,7 @@ int main(int argc, char *argv[])
     AssignTexturePackToEntity(sniper_bullet, res.sniper_bullet_frames);
 
     // Affecter des marques et des sons spécifiques
-    drone_sb->mark    = res.explosive_mark;
+    drone_explosive->mark    = res.explosive_mark;
     drone_nova->mark  = res.nova_mark;
     drone_hunter->mark = res.hunter_mark;
     AssignSoundPackToEntity(drone, res.magnum_pistol_sounds);
@@ -534,15 +547,16 @@ int main(int argc, char *argv[])
         if (currentState->init)
             currentState->init();
 
-        Uint32 last = SDL_GetTicks(); // Temps de départ
+        Uint64 last = SDL_GetPerformanceCounter(); // Temps de départ
 
         while (game_running && !currentState->shouldTransition()) {
-            //const Uint32 frame_start = SDL_GetTicks(); // Début de la frame
 
             // --- Calcul du delta time ---
-            const Uint32 now = SDL_GetTicks();
-            DELTA_TIME = (now - last) / 1000.; // En secondes
+            const Uint64 now = SDL_GetPerformanceCounter();
+            DELTA_TIME = (double)(now - last) / (double)SDL_GetPerformanceFrequency(); // En secondes
             last = now;
+
+            SMOOTHED_DT = ALPHA * SMOOTHED_DT + (1 - ALPHA) * DELTA_TIME;
 
             // --- Affichage delta_time et FPS ---
             /*const double fps = DELTA_TIME > 0.0 ? 1.0 / DELTA_TIME : 0.0;
@@ -554,14 +568,16 @@ int main(int argc, char *argv[])
             currentState->render();
 
             // --- Limitation FPS ---
-            //const Uint32 frame_time = SDL_GetTicks() - frame_start;
+            //const Uint64 frame_time = SDL_GetPerformanceCounter() - now;
 
             /*if (frame_time < FRAME_DELAY) {
-                // Dormir la majeure partie du temps restant
-                SDL_Delay(FRAME_DELAY - frame_time - 1);
+                // Convertir ticks restants en millisecondes pour SDL_Delay
+                const Uint32 delay_ms = (Uint32)((FRAME_DELAY - frame_time) * 1000 / SDL_GetPerformanceFrequency());
+                if (delay_ms > 0)
+                    SDL_Delay(delay_ms);
 
                 // Spin-wait pour le reste du temps (plus précis)
-                while (SDL_GetTicks() - frame_start < FRAME_DELAY) {
+                while (SDL_GetPerformanceCounter() - now < FRAME_DELAY) {
                     // boucle vide, attente active
                 }
             }*/
@@ -569,21 +585,23 @@ int main(int argc, char *argv[])
 
         // Transition entre les états
         switch(game_state) {
-        case STATE_MENU:
-            game_state = STATE_DIFFICULTY;
-            break;
-        case STATE_DIFFICULTY:
-            game_state = STATE_GAME;
-            break;
-        case STATE_GAME:
-            game_state = STATE_CINEMATIC;
-            break;
-        case STATE_CINEMATIC:
-            game_state = STATE_GAMEOVER;
-            break;
-        case STATE_GAMEOVER:
-            game_state = game_restart ? STATE_MENU : STATE_GAMEOVER;
-            break;
+            case STATE_MENU:
+                game_state = STATE_DIFFICULTY;
+                break;
+            case STATE_DIFFICULTY:
+                game_state = STATE_GAME;
+                break;
+            case STATE_GAME:
+                game_state = STATE_CINEMATIC;
+                break;
+            case STATE_CINEMATIC:
+                game_state = STATE_GAMEOVER;
+                break;
+            case STATE_GAMEOVER:
+                game_state = game_restart ? STATE_MENU : STATE_GAMEOVER;
+                break;
+            default:
+                break;
         }
     }
 
@@ -603,10 +621,11 @@ int main(int argc, char *argv[])
     DestroySolid(pause_title);
     DestroySolid(player_info.title);
 
-    DestroyEntityList(ennemies);
-    DestroyEntity(player);
+    DestroyEntityList(team1);
+    DestroyEntityList(team2);
+    //DestroyEntity(player);
     DestroyEntity(drone);
-    DestroyEntity(drone_sb);
+    DestroyEntity(drone_explosive);
     DestroyEntity(drone_nova);
     DestroyEntity(drone_hunter);
     DestroyEntity(regular_bullet);

@@ -1,3 +1,6 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
 #include "audio.h"
 #include "constants.h"
 #include "entity.h"
@@ -5,114 +8,98 @@
 #include "globals.h"
 #include "graphics.h"
 #include "utils.h"
-#include "hud.h"
-#include "resource_pack.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-
+#include "player.h"
 #include "rng.h"
+#include "resource_pack.h"
 
-Entity *CreateEntity(void) {
+Entity *CreateEntity(const int class, const int type, const float width, const float height) {
     Entity *entity = malloc(sizeof(Entity));
-    //if (!entity)
-    //    return NULL;
     entity->AI = 0;
     entity->AI_lifetime = 0;
-    entity->ID = entity_count++;
-    /*entity->frames = NULL;
-    entity->frames_highlighted = NULL;
-    entity->frame_dead = NULL;*/
+    entity->type = type;
+    entity->class = class;
+    entity->hitbox.w = (float)(width / 1920.0 * WIDTH);
+    entity->hitbox.h = (float)(height / 1080.0 * HEIGHT);
     entity->texture_pack = NULL;
     entity->mark = NULL;
     entity->sounds = NULL;
-    entity->projectiles = NULL;
+    entity->team = NULL;
+    entity->ammo = NULL;
     return entity;
 }
 
-void InitEntity(Entity *entity, const float width, const float height, const int category, const double HP, const double damage, const double m_damage, const double speed, const double rate_min, const double rate_max, const int precision, const int stability) {
-    entity->hitpoints = HP;
-    entity->hitpoints_max = HP;
+void InitEntity(Entity *entity, const double health, const double damage, const double speed, const double rate_min, const double rate_max, const int precision, const int stability) {
+    entity->health = health;
+    entity->health_max = health;
     entity->damage = damage;
-    entity->melee_damage = m_damage;
     entity->speed = speed;
     entity->velocity_x = 0;
     entity->velocity_y = 0;
     entity->fire_rate_min = rate_min;
     entity->fire_rate_max = rate_max;
-    entity->fire_cooldown = 0;
-    entity->aim_cooldown = 0;
+    entity->fire_delay = 0;
+    entity->aim_delay = 0;
     entity->precision = precision;
     entity->stability = stability;
     entity->aiming = 0;
-    /*entity->hit_cooldown = 0;
-    entity->has_hit = 0;
-    entity->is_projectile = 0;*/
-    entity->elementary = 0;
+    entity->ammo_count = 10;
+    entity->ammo_max = 10;
+    entity->ammo_cost = 1;
+    entity->ammo_reload = 10. / 3.;
+    entity->acc_damage = 0;
     entity->effect = 0;
     entity->highlight = 0;
-    entity->type = category;
     entity->prestige = 0;
-    entity->frame_time = 0.05;
-    entity->frame_cooldown = 0;
+    entity->frame_time = FRAME_TIME;
+    entity->frame_delay = 0;
     entity->hitbox.x = 0;
     entity->hitbox.y = 0;
-    entity->hitbox.w = (float)(width / 1920.0 * WIDTH);
-    entity->hitbox.h = (float)(height / 1080.0 * HEIGHT);
     entity->target.x = 0;
     entity->target.y = 0;
     entity->target.w = 0;
     entity->target.h = 0;
-    if (!entity->projectiles)
-        entity->projectiles = CreateEntityList();
 }
 
 void CloneEntity(Entity *clone, const Entity *entity) {
-    clone->hitpoints = entity->hitpoints;
-    clone->hitpoints_max = entity->hitpoints_max;
+    clone->health = entity->health;
+    clone->health_max = entity->health_max;
     clone->damage = entity->damage;
-    clone->melee_damage = entity->melee_damage;
     clone->speed = entity->speed;
     clone->velocity_x = entity->velocity_x;
     clone->velocity_y = entity->velocity_y;
     clone->fire_rate_min = entity->fire_rate_min;
     clone->fire_rate_max = entity->fire_rate_max;
-    clone->fire_cooldown = entity->fire_cooldown;
-    clone->aim_cooldown = entity->aim_cooldown;
+    clone->fire_delay = entity->fire_delay;
+    clone->aim_delay = entity->aim_delay;
     clone->precision = entity->precision;
     clone->stability = entity->stability;
     clone->aiming = entity->aiming;
-    /*clone->hit_cooldown = entity->hit_cooldown;
-    clone->has_hit = entity->has_hit;
-    clone->is_projectile = entity->is_projectile;*/
-    clone->elementary = entity->elementary;
+    clone->ammo_count = entity->ammo_count;
+    clone->ammo_max = entity->ammo_max;
+    clone->ammo_cost = entity->ammo_cost;
+    clone->ammo_reload = entity->ammo_reload;
+    clone->acc_damage = entity->acc_damage;
     clone->effect = entity->effect;
     clone->highlight = entity->highlight;
+    clone->class = entity->class;
     clone->type = entity->type;
     clone->prestige = entity->prestige;
     clone->frame_time = entity->frame_time;
-    clone->frame_cooldown = entity->frame_cooldown;
+    clone->frame_delay = entity->frame_delay;
     clone->frame_index = entity->frame_index;
-    //clone->reverse_frame_mode = entity->reverse_frame_mode;
-    //clone->num_frames = entity->num_frames;
     clone->current_animation = entity->current_animation;
     clone->num_sounds = entity->num_sounds;
-    //clone->extended_frames = entity->extended_frames;
     clone->hitbox = entity->hitbox;
     clone->target = entity->target;
-    //clone->frames = entity->frames;
-    //clone->frames_highlighted = entity->frames_highlighted;
-    //clone->frame_dead = entity->frame_dead;
     clone->texture_pack = entity->texture_pack;
     clone->mark = entity->mark;
     clone->sounds = entity->sounds;
-    clone->projectiles = entity->projectiles;
+    clone->ammo = entity->ammo;
 }
 
 void DestroyEntity(Entity *entity) {
-    if (entity->projectiles)
-        DestroyEntityList(entity->projectiles);
-    free(entity);
+    if (entity)
+        free(entity);
 }
 
 void UpdateEntityState(Entity *entity) {
@@ -122,8 +109,8 @@ void UpdateEntityState(Entity *entity) {
         else if (entity->AI_lifetime > 0)
             entity->AI_lifetime -= DELTA_TIME;
     }
-    if (entity->frame_cooldown <= 0) {
-        entity->frame_cooldown += entity->frame_time;
+    if (entity->frame_delay <= 0) {
+        entity->frame_delay += entity->frame_time;
         if (entity->texture_pack->animations[entity->current_animation]->reverse_frame_mode == 0 && ++entity->frame_index == entity->texture_pack->animations[entity->current_animation]->num_frames)
             entity->frame_index = 0;
         else if (entity->texture_pack->animations[entity->current_animation]->reverse_frame_mode > 0 && ++entity->frame_index == entity->texture_pack->animations[entity->current_animation]->num_frames) {
@@ -134,16 +121,19 @@ void UpdateEntityState(Entity *entity) {
             entity->texture_pack->animations[entity->current_animation]->reverse_frame_mode *= -1;
         }
     } else {
-        entity->frame_cooldown -= DELTA_TIME;
+        entity->frame_delay -= DELTA_TIME;
     }
-    if (entity->fire_cooldown > 0)
-        entity->fire_cooldown -= DELTA_TIME;
+    if (entity->fire_delay > 0)
+        entity->fire_delay -= DELTA_TIME;
     if (entity->effect > 0)
         entity->effect -= DELTA_TIME;
     if (entity->highlight > 0)
         entity->highlight -= DELTA_TIME;
-    /*if (entity->hit_cooldown > 0)
-        entity->hit_cooldown -= DELTA_TIME;*/
+    if (entity->ammo_count < entity->ammo_max){
+        entity->ammo_count += entity->ammo_reload * DELTA_TIME;
+        if (entity->ammo_count > entity->ammo_max)
+            entity->ammo_count = entity->ammo_max;
+    }
 }
 
 /* ----------------------------------------------------------------------------
@@ -208,7 +198,7 @@ SDL_Texture* RenderEntity(const Entity *entity) {
  * Affiche également la texture de la marque (mark) si présente.
  * ----------------------------------------------------------------------------
  */
-void DisplayEntity(const Entity *entity) {
+void DisplayEntity(Entity *entity) {
     if (!entity) {
         fprintf(stderr, "DisplayEntity: entity est NULL.\n");
         return;
@@ -226,10 +216,26 @@ void DisplayEntity(const Entity *entity) {
         DrawTexture(entity->mark, rect);
 }
 
+void DisplayHealthBar(Entity *entity){
+    if (entity->health > 0) {
+        const SDL_Rect bar = {
+        (int)entity->hitbox.x,
+        (int)entity->hitbox.y - 25,
+        (int)(entity->hitbox.w / entity->health_max * entity->health),
+        10
+        };
+    DrawRect(bar, 255, 0, 0, 255);
+    }
+}
+
+void DisplayEntityHitbox(Entity *entity){
+    DrawTexture(res.entity_debug_hitbox, FRectToRect(entity->hitbox));
+}
+
 void MoveEntity(Entity *entity, const _Bool pass) {
     // Calculer le déplacement réel par rapport au temps
-    double x = entity->velocity_x * entity->speed * DELTA_TIME;
-    double y = entity->velocity_y * entity->speed * DELTA_TIME;
+    double x = entity->velocity_x * entity->speed * SMOOTHED_DT;
+    double y = entity->velocity_y * entity->speed * SMOOTHED_DT;
 
     // Appliquer effet éventuel (ralentissement)
     if (entity->effect > 0) {
@@ -262,12 +268,12 @@ void MoveEntityAndCursor(Entity *entity, const _Bool pass, const int cursor_x, c
 void SummonEntity(Entity *entity, const int lifetime, const float x, const float y) {
     EnableEntityAI(entity, lifetime);
     SetPositionF(&entity->hitbox, x, y);
-    entity->hitpoints = entity->hitpoints_max;
+    entity->health = entity->health_max;
     entity->velocity_x = 0;
     entity->velocity_y = 0;
 }
 
-void DisplayEntityLaserBeam(const Entity *entity){
+void DisplayEntityLaserBeam(Entity *entity){
     if (IsEntityAlive(entity) && entity->aiming){
         const int xa = (int)(entity->hitbox.x + entity->hitbox.w / 2.0);
         const int ya = (int)(entity->hitbox.y + entity->hitbox.h / 2.0);
@@ -283,32 +289,30 @@ void DisplayEntityLaserBeam(const Entity *entity){
 void EntityCease(Entity *entity){
     if (entity->aiming){
         entity->aiming = 0;
-        entity->aim_cooldown = 1;
+        entity->aim_delay = 1;
     }
 }
 
 void EntityAim(Entity *entity, const float x, const float y, const float w, const float h) {
-    if (entity->fire_cooldown <= 0 && entity->aim_cooldown > 0){
+    if (entity->fire_delay <= 0 && entity->aim_delay > 0){
         entity->aiming = 1;
         entity->target.x = x;
         entity->target.y = y;
         entity->target.w = w;
         entity->target.h = h;
-        entity->aim_cooldown -= DELTA_TIME;
-        if (entity->aim_cooldown <= 0)
+        entity->aim_delay -= DELTA_TIME;
+        if (entity->aim_delay <= 0)
             EntityCease(entity);
     }
 
 }
 
-void EntityShoot(Entity *entity, EntityList *projectiles, const Entity *ammo, const float x, const float y, const float w, const float h) {
-    if (!entity->aiming && entity->fire_cooldown <= 0) {
-        Entity *projectile = CreateEntity();
-        CloneEntity(projectile, ammo);
+void EntityShoot(Entity *entity, const float x, const float y, const float w, const float h) {
+    if (!entity->aiming && entity->fire_delay <= 0 && entity->ammo_count > 0) {
+        entity->ammo_count -= entity->ammo_cost;
+        Entity *projectile = CreateEntity(UNIT, NONE, 0, 0);
+        CloneEntity(projectile, entity->ammo);
         EnableEntityAI(projectile, 5);
-        projectile->melee_damage = entity->damage;
-        projectile->hitpoints = 0.1;
-        //projectile->is_projectile = 1;
         const double xa = entity->hitbox.x + entity->hitbox.w / 2.0;
         const double ya = entity->hitbox.y + entity->hitbox.h / 2.0;
         const double xb = x + w / 2.0;
@@ -318,11 +322,11 @@ void EntityShoot(Entity *entity, EntityList *projectiles, const Entity *ammo, co
         projectile->velocity_y = set_velocity_y(sin(alpha) * (1 + randint(-100 + entity->precision, 100 - entity->precision) / 100.0));
         projectile->hitbox.x = (float)(entity->hitbox.x + entity->hitbox.w / 2.0 - projectile->hitbox.w / 2.0);
         projectile->hitbox.y = (float)(entity->hitbox.y + entity->hitbox.h / 2.0 - projectile->hitbox.h / 2.0);
-        entity->fire_cooldown += randdouble(entity->fire_rate_min, entity->fire_rate_max); // randdouble
-        if (entity->effect > 0) entity->fire_cooldown *= 2;
+        entity->fire_delay += randdouble(entity->fire_rate_min, entity->fire_rate_max); // randdouble
+        if (entity->effect > 0) entity->fire_delay *= 2;
         if (entity->sounds)
             PlaySound(entity->sounds[randint(0, entity->num_sounds - 1)]);
-        AddEntity(projectiles, projectile);
+        AddEntity(entity->team, projectile);
     }
 }
 
@@ -341,24 +345,18 @@ void ProcessDroneAI(Entity *e) {
     {
     case DRONE:
         MoveEntity(e, 1);
-        Entity *ammo;
-        if (e->prestige) {
-            ammo = raw_plasma_orb;
-        } else {
-            ammo = regular_bullet;
-        }
-        EntityShoot(e, drone->projectiles, ammo,
+        EntityShoot(e,
                     player->hitbox.x, player->hitbox.y,
                     player->hitbox.w, player->hitbox.h);
         break;
-    case DRONE_SUICIDE_BOMBER:
+    case DRONE_EXPLOSIVE:
         MoveEntity(e, 1);
         EntityIntercept(e, player->hitbox.x, player->hitbox.y,
                         player->hitbox.w, player->hitbox.h);
         break;
     case DRONE_NOVA:
         MoveEntity(e, 1);
-        EntityShoot(e, drone->projectiles, nova_orb,
+        EntityShoot(e,
                     player->hitbox.x, player->hitbox.y,
                     player->hitbox.w, player->hitbox.h);
         break;
@@ -366,7 +364,7 @@ void ProcessDroneAI(Entity *e) {
         if (AreEntitiesNear(e, player, HEIGHT - scale_height(128))) {
             EntityAim(e, player->hitbox.x, player->hitbox.y,
                       player->hitbox.w, player->hitbox.h);
-            EntityShoot(e, drone->projectiles, sniper_bullet,
+            EntityShoot(e,
                         player->hitbox.x, player->hitbox.y,
                         player->hitbox.w, player->hitbox.h);
         } else {
@@ -381,42 +379,48 @@ void ProcessDroneAI(Entity *e) {
 }
 
 
-void UpdateEntities(void) {
-    const EntityNode *node = ennemies->head;
+void UpdateEntities(EntityList *entities) {
+    const EntityNode *node = entities->head;
     while (node) {
         const EntityNode *next = node->next;
         Entity *e = node->entity;
-
-        if (IsEntityAIDisabled(e)) {
-            RemoveEntity(ennemies, e);
-        } else if (IsEntityAlive(e)) {
+        switch (e->class) {
+        case PLAYER:
+            MoveEntity(e, 0);
             UpdateEntityState(e);
-            ProcessDroneAI(e);
-        } else {
-            MoveEntity(e, 1);
-            UpdateEntityState(e);
-            e->speed *= pow(1.5, DELTA_TIME);
+            UpdatePlayer();
+            break;
+        case PROJECTILE:
+            if (IsEntityAIDisabled(e) || IsEntityDead(e))
+                RemoveEntity(entities, e);
+            else{
+                MoveEntity(e, 1);
+                UpdateEntityState(e);
+            }
+            break;
+        default:
+            if (IsEntityAIDisabled(e))
+                RemoveEntity(entities, e);
+            else if (IsEntityAlive(e)) {
+                UpdateEntityState(e);
+                ProcessDroneAI(e);
+            } else {
+                MoveEntity(e, 1);
+                UpdateEntityState(e);
+                e->speed *= pow(1.5, DELTA_TIME);
+            }
+            break;
         }
 
         node = next;
     }
 }
 
-void UpdateProjectiles(EntityList *projectiles) {
-    const EntityNode *node = projectiles->head;
-    while (node) {
-        const EntityNode *next = node->next;
-        if (IsEntityAIEnabled(node->entity)) {
-            MoveEntity(node->entity, 1);
-            UpdateEntityState(node->entity);
-        } else {
-            RemoveEntity(projectiles, node->entity);
-        }
-        node = next;
-    }
+void SetAmmo(Entity *entity, Entity *ammo){
+    entity->ammo = ammo;
 }
 
-void HandleCollision(Entity **entity1, Entity **entity2) {
+/*void HandleCollision(Entity **entity1, Entity **entity2) {
 
     Entity *e1 = *entity1;
     Entity *e2 = *entity2;
@@ -444,7 +448,6 @@ void HandleCollision(Entity **entity1, Entity **entity2) {
         if (e2->elementary == 1) e1->effect = 1.5;
     }
 
-    /*
     if (entity1->hit_cooldown <= 0.0) {
         entity1->hitpoints -= entity2->melee_damage;
         entity1->hit_cooldown = 0.2;
@@ -453,9 +456,10 @@ void HandleCollision(Entity **entity1, Entity **entity2) {
         entity2->hitpoints -= entity1->melee_damage;
         entity2->hit_cooldown = 0.2;
     }
-    */
-}
 
+}*/
+
+/*
 void CheckCollisions(void) {
     EntityNode *node = ennemies->head;
     while (node) {
@@ -488,17 +492,18 @@ void CheckCollisions(void) {
         node = next;
     }
 }
+*/
 
-void HandleSummonLogic(void) {
+void HandleSummonLogic(EntityList *entities) {
     summon_cooldown -= DELTA_TIME;
     if (summon_cooldown <= 0) {
         summon_cooldown += randdouble(summon_cooldown_max / 5., summon_cooldown_max); // randdouble
         summon_cooldown_max -= DELTA_TIME;
 
-        Entity *e = CreateEntity();
+        Entity *e = CreateEntity(UNIT, NONE, 0, 0);
         const int category = randint(0, 49);
 
-        if (easter_egg || category < 15) CloneEntity(e, drone_sb);
+        if (easter_egg || category < 15) CloneEntity(e, drone_explosive);
         else if (category < 20) CloneEntity(e, drone_nova);
         else if (category == 20) CloneEntity(e, drone_hunter);
         else CloneEntity(e, drone);
@@ -507,12 +512,15 @@ void HandleSummonLogic(void) {
         if (category >= 15 && category < 20) lifetime = 15;
 
         const int prestige = randint(0, 10000);
-        if (prestige < 100) {
+        if (easter_egg || prestige < 100) {
             e->prestige = 1;
             AssignTexturePackToEntity(e, res.silver_drone_frames);
-            if (category > 20)
+            if (category > 20){
                 AssignSoundPackToEntity(e, res.plasma_pistol_sounds);
-        } else if (prestige == 100) {
+                SetAmmo(e, raw_plasma_orb);
+            }
+        }
+        else if (prestige == 100) {
             e->prestige = 2;
             AssignTexturePackToEntity(e, res.gold_drone_frames);
             if (category > 20)
@@ -524,7 +532,7 @@ void HandleSummonLogic(void) {
         const float x = side ? (float)WIDTH + drone->hitbox.w : -drone->hitbox.w;
         SummonEntity(e, lifetime, x, y);
         e->velocity_x = set_velocity_x(side ? -1 : 1);
-        AddEntity(ennemies, e);
+        AddEntity(entities, e);
     }
 }
 
@@ -554,10 +562,10 @@ _Bool IsEntityAIDisabled(const Entity *entity) {
 }
 
 _Bool IsEntityAlive(const Entity *entity) {
-    return entity->hitpoints > 0;
+    return entity->health > 0;
 }
 
 _Bool IsEntityDead(const Entity *entity) {
-    return entity->hitpoints <= 0;
+    return entity->health <= 0;
 }
 

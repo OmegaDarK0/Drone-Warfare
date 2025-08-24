@@ -105,11 +105,11 @@ void SetPositionF(SDL_FRect *frect, const float x, const float y) {
     frect->y = y;
 }
 
-_Bool Intersecting(const SDL_FRect frect1, const SDL_FRect frect2) {
+/*_Bool Intersecting(const SDL_FRect frect1, const SDL_FRect frect2) {
     const SDL_Rect r1 = FRectToRect(frect1);
     const SDL_Rect r2 = FRectToRect(frect2);
     return SDL_HasIntersection(&r1, &r2);
-}
+}*/
 
 void GetTextureSize(SDL_Texture *texture, int *width, int *height) {
     if (SDL_QueryTexture(texture, NULL, NULL, width, height) < 0) {

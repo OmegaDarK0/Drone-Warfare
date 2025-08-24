@@ -12,7 +12,7 @@ void UpdatePlayer(void) {
     player->velocity_y = set_velocity_y(vy);
 
     if (key_mouse) {
-        EntityShoot(player, player->projectiles, plasma_orb,
+        EntityShoot(player,
                     (float)cursor->rect.x, (float)cursor->rect.y, 0, 0);
     }
 }

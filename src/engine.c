@@ -50,9 +50,8 @@ int InitEngine() {
     HEIGHT = dm.h;
     REFRESH_RATE = dm.refresh_rate;
     FPS = REFRESH_RATE;
-    FRAME_DELAY = 1000 / FPS;
+    FRAME_DELAY = SDL_GetPerformanceFrequency() / FPS;
     SCREEN = rect(0, 0, WIDTH, HEIGHT, 0);
-    
     window = SDL_CreateWindow("Drone Warfare", 0, 0, WIDTH, HEIGHT, SDL_WINDOW_FULLSCREEN);
     if (!window) {
         SDL_Log("SDL_CreateWindow: %s", SDL_GetError());

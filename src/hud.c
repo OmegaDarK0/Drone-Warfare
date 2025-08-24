@@ -33,9 +33,9 @@ void InitHUD(void) {
 
 void DisplayHUD(const Entity *entity) {
     if (entity->effect <= 0) {
-        hitpoints_rect.w = scale_width((int)entity->hitpoints);
-        hitpoints_max_rect.x = scale_width((int)entity->hitpoints) + hitpoints_rect.x;
-        hitpoints_max_rect.w = scale_width((int)(entity->hitpoints_max - entity->hitpoints));
+        hitpoints_rect.w = scale_width((int)entity->health);
+        hitpoints_max_rect.x = scale_width((int)entity->health) + hitpoints_rect.x;
+        hitpoints_max_rect.w = scale_width((int)(entity->health_max - entity->health));
         DrawRect(hitpoints_rect, 0, 255, 0, 255);
         DrawRect(hitpoints_max_rect, 255, 0, 0, 255);
         DrawText(hitpoints_info, 0);
@@ -58,8 +58,8 @@ void RenderScore(void) {
     score_info->texture = LoadTextureFromText(score_str, font_large, WHITE);
 }
 
-void GainScore(const Entity *entity, const int difficulty) {
-    player_score += 5 * (int)pow(2, entity->type) * (entity->prestige + 1) * difficulty;
+void GainScore(const Entity *entity) {
+    player_score += 5 * (int)pow(2, entity->type) * (entity->prestige + 1) * game_difficulty;
     RenderScore();
 }
 
