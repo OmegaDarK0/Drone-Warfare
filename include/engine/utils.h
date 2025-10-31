@@ -1,5 +1,5 @@
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef ENGINE_UTILS_H
+#define ENGINE_UTILS_H
 
 typedef enum {
     SUCCESS = 0,
@@ -7,4 +7,4 @@ typedef enum {
     ERROR = -1
 }EngineStatus;
 
-#endif //UTILS_H
+#endif //ENGINE_UTILS_H
