@@ -1,14 +1,13 @@
-#include "engine/core.h"
-#include "engine/logger.h"
 #include "game/engine.hpp"
 
-int GameMain() {
-    try {
-        EngineGuard engine;
-        SDL_Delay(1500);
-    } catch (const std::exception&) {
-        return -1;
-    }
+int main(const int argc, char* argv[]) {
+    (void)argc;
+    (void)argv;
+    Engine engine;
+    Renderer& render {engine.renderer};
+    render.clear();
+    render.draw_point(400, 400);
+    render.present();
+    engine.sleep(1);
     return 0;
 }
-
