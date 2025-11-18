@@ -23,9 +23,10 @@ typedef enum {
     LOG_OK,
     LOG_WARN,
     LOG_ERROR
-} LogLevel;
+} Log_Level;
 
-void Engine_Log(LogLevel level, const char *ns, const char *module, const char *fmt, ...);
+void Engine_VLog(Log_Level level, const char *ns, const char *module, const char *fmt, va_list args);
+void Engine_Log(Log_Level level, const char *ns, const char *module, const char *fmt, ...);
 
 #ifdef __cplusplus
 }
