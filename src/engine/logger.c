@@ -1,12 +1,10 @@
 #include "engine/logger.h"
 
-void Engine_Log(const LogLevel level, const char *ns, const char *module, const char *fmt, ...) {
+void Engine_VLog(const Log_Level level, const char *ns, const char *module, const char *fmt, va_list args) {
     const time_t now = time(NULL);
     const struct tm *t = localtime(&now);
     char timebuf[9];
     strftime(timebuf, sizeof(timebuf), "%H:%M:%S", t);
-    va_list args;
-    va_start(args, fmt);
     const char *color = COLOR_RESET;
     const char *tag = "[INFO]";
     switch (level) {
@@ -20,5 +18,11 @@ void Engine_Log(const LogLevel level, const char *ns, const char *module, const 
     fprintf(stdout, "%s [%s] %s %-15s: ", color, timebuf, tag, srcbuf);
     vfprintf(stdout, fmt, args);
     fprintf(stdout, "%s\n", COLOR_RESET);
+}
+
+void Engine_Log(const Log_Level level, const char *ns, const char *module, const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    Engine_VLog(level, ns, module, fmt, args);
     va_end(args);
 }

@@ -1,10 +1,11 @@
 #include "engine/core.h"
+#include "engine/window.h"
 #include "engine/renderer.h"
 #include "engine/logger.h"
 #include "engine/utils.h"
 
-static char *ns = "ENGINE";
-static char *module = "CORE";
+static const char *ns = "ENGINE";
+static const char *module = "CORE";
 
 int Engine_Init(void) {
     _Bool warning = 0;
